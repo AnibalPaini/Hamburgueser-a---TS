@@ -1,4 +1,4 @@
-export interface OrdenInterface {
+export type OrdenType = {
     id:number,
     usuarioId: number;
     hamburguesas: {hamburguesaId: number, cantidad: number}[];

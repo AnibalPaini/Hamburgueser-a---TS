@@ -1,4 +1,4 @@
-export interface PagoInterface {
+export type PagoType = {
   id: number;
   ordenId: number;
   monto: number;

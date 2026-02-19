@@ -1,4 +1,4 @@
-export interface UsuarioInterface {
+export type UsuarioType = {
   id: number;
   nombre: string;
   email: string;
