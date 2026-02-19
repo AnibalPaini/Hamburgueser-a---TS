@@ -1,14 +1,15 @@
 import { Router } from "express";
+import { getHamburguesas, postHamburguesa, putHamburguesa, deleteHamburguesa } from "./hamburguesa.controller.js";
 
 const router: Router = Router();
 
-router.get("/", (req, res) => {
-  res.send("Hamburguesa route");
-});
+router.get("/", getHamburguesas);
 
-router.post("/", (req, res) => {
-  const { name, price } = req.body;
-  res.json({ name, price });
-});
+router.post("/", postHamburguesa);
+
+router.put("/:id", putHamburguesa);
+
+router.delete("/:id", deleteHamburguesa);
+
 
 export default router;

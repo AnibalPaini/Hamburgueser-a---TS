@@ -7,3 +7,5 @@ export type HamburguesaType = {
     imagenUrl?: string;
     adicionales?: string[];
 }
+
+export type HamburguesaBody = Omit<HamburguesaType, "id">;
