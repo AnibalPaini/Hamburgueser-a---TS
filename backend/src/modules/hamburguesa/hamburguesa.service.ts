@@ -3,6 +3,7 @@ import HamburguesaModel from "./hamburguesa.model.js";
 import type { HamburguesaBody } from "./hamburguesa.type.js";
 
 export default class HamburguesaService {
+  
   async getAll() {
     return HamburguesaModel.find();
   }
