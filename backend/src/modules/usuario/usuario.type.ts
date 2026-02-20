@@ -1,7 +1,7 @@
 import type { ObjectId } from "mongoose";
 
 export type UsuarioType = {
-  id: ObjectId;
+  id: string;
   nombre: string;
   email: string;
   telefono: string;

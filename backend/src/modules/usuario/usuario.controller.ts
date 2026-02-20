@@ -1,6 +1,12 @@
 import type { Request, Response } from "express";
 import UsuarioService from "./usuario.service.js";
-import type { UsuarioCreateType, UsuarioUpdateType, UsuarioLoginType, UsuarioRegisterType, UsuarioJWTType } from "./usuario.type.js";
+import type {
+  UsuarioCreateType,
+  UsuarioUpdateType,
+  UsuarioLoginType,
+  UsuarioRegisterType,
+  UsuarioJWTType,
+} from "./usuario.type.js";
 import { generateToken } from "../../utils/jwt.js";
 import { cookieExtractor } from "../../utils/cookies.js";
 
@@ -8,7 +14,7 @@ const usuarioService = new UsuarioService();
 
 /* LOGIN - REGISTER */
 
-export const loginUsuario = async (
+export const login = async (
   req: Request<{}, {}, UsuarioLoginType>,
   res: Response,
 ) => {
@@ -19,20 +25,57 @@ export const loginUsuario = async (
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
     const token = generateToken({
-      id: usuario._id,
+      id: usuario._id.toString(),
       nombre: usuario.nombre,
       email: usuario.email,
-      telefono: usuario.telefono,
       rol: usuario.rol,
-      activo: usuario.activo,
     });
-    res.cookie("token", token, { httpOnly: true });
-    res.json({ message: "Login exitoso", usuario, token });
+
+    res.cookie("token", token, {
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 días
+      httpOnly: true,
+      signed: true,
+      sameSite: "strict",
+    });
+
+    res.json({ message: "Login exitoso" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Error al iniciar sesión" });
   }
-}
+};
 
+export const register = async (
+  req: Request<{}, {}, UsuarioRegisterType>,
+  res: Response,
+) => {
+  try {
+    const { nombre, telefono, email, password } = req.body;
+    const usuario = await usuarioService.register(
+      email,
+      password,
+      nombre,
+      telefono,
+    );
+    if (!usuario) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    res.json({ message: "Registro exitoso" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error al registrar usuario" });
+  }
+};
+
+export const logout = (req: Request, res: Response) => {
+  try {
+    res.clearCookie("token");
+    res.json({ message: "Logout exitoso" });
+  } catch (error) {
+    res.status(500).json({ error: "Error al cerrar sesión" });
+  }
+};
 
 /* Controllers de admin */
 
@@ -67,6 +110,9 @@ export const postUsuario = async (
 ) => {
   try {
     const { nombre, email, telefono, password, rol, activo } = req.body;
+    if (!nombre || !email || !telefono || !password || !rol) {
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
+    }
     const nuevoUsuario = await usuarioService.create({
       nombre,
       email,
@@ -77,6 +123,7 @@ export const postUsuario = async (
     });
     res.status(201).json(nuevoUsuario);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Error al crear usuario" });
   }
 };
@@ -94,6 +141,7 @@ export const putUsuario = async (
     }
     res.json({ message: "Usuario actualizado", data: datos });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Error al actualizar usuario" });
   }
 };

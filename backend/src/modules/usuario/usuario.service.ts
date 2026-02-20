@@ -1,4 +1,4 @@
-import { comparePassword } from './../../utils/bcrypt';
+import { comparePassword, hashPassword } from "./../../utils/bcrypt.js";
 import UsuarioModel from "./usuario.model.js";
 import type {
   UsuarioType,
@@ -6,7 +6,6 @@ import type {
   UsuarioUpdateType,
 } from "./usuario.type.js";
 
-import {comparePassword} from "../../utils/bcrypt.js";
 
 export default class UsuarioService {
   async getAll() {
@@ -42,5 +41,27 @@ export default class UsuarioService {
       return null;
     }
     return usuario;
+  }
+
+  async register(
+    email: string,
+    password: string,
+    nombre: string,
+    telefono: string,
+  ) {
+    const existingUser = await UsuarioModel.findOne({ email });
+    if (existingUser) {
+      return null; // Usuario ya existe
+    }
+    const hashedPassword = await hashPassword(password);
+    const newUsuario = new UsuarioModel({
+      email,
+      password: hashedPassword,
+      nombre,
+      telefono,
+      rol: "cliente",
+      activo: true,
+    });
+    return await newUsuario.save();
   }
 }

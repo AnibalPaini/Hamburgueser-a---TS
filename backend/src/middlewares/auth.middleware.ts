@@ -6,7 +6,7 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Obtener el token del encabezado Authorization
+  const token = req.signedCookies.token
   if (!token) {
     return res.status(401).json({ error: "Token no proporcionado" });
   }
