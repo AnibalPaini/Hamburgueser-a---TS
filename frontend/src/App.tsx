@@ -1,12 +1,10 @@
 import "./App.css";
-
+import { AuthProvider } from "./context/auth/auth.provider";
 function App() {
-
-
   return (
-    <>
-      <p>APP</p>
-    </>
+    <AuthProvider>
+      <p className="">APP</p>
+    </AuthProvider>
   );
 }
 
