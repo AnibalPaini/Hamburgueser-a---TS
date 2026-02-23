@@ -1,33 +1,20 @@
 import mongoose from "mongoose";
-import type { ProductoType } from "./productos.type.js";
+import type { Producto } from "../../types.js";
 
-const hamburguesaSchema = new mongoose.Schema<ProductoType>({
-    nombre: {
-        type: String,
-        required: true,
-    },
-    precio: {
-        type: Number,
-        required: true,
-    },
-    categoria: {
-        type: String,
-        enum: ["extra", "bebida", "postre"],
-        required: true,
-    },
-    descripcion: {
-        type: String,
-    },
-    imagenUrl: {
-        type: String,
-        required: true,
-    },
-    disponible: {
-        type: Boolean,
-        default: true,
-    },
-})
+const productoSchema = new mongoose.Schema<Producto>({
+  nombre: { type: String, required: true },
+  precio: { type: Number, required: true },
+  categoria: {
+    type: String,
+    enum: ["hamburguesa", "papas", "bebida", "extra", "postre"],
+    required: true,
+  },
+  descripcion: { type: String },
+  imagenUrl: { type: String },
+  activo: { type: Boolean, default: true },
+  extrasDisponibles: { type: [String], default: undefined },
+});
 
-const ProductoModel = mongoose.model<ProductoType>("Producto", hamburguesaSchema);
+const ProductoModel = mongoose.model<Producto>("Producto", productoSchema);
 
 export default ProductoModel;

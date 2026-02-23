@@ -1,10 +1,12 @@
 import express from "express";
-import hamburguesaRouter from "./modules/hamburguesa/hamburguesa.router.js";
 import config from "./config/config.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./config/mongodb.js";
 import usuarioRouter from "./modules/usuario/usuario.router.js";
+import ordenRouter from "./modules/orden/orden.router.js";
+import productoRouter from "./modules/productos/producto.router.js"
+import promocionesRouter from "./modules/promociones/promocion.router.js";
 
 const app = express();
 app.use(express.json());
@@ -16,8 +18,10 @@ app.use(cookieParser(config.cookieSecret));
 
 
 //endpoints
-app.use("/api/hamburguesas", hamburguesaRouter);
 app.use("/api/usuarios", usuarioRouter);
+app.use("/api/ordenes", ordenRouter);
+app.use("/api/productos", productoRouter);
+app.use("/api/promociones", promocionesRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
