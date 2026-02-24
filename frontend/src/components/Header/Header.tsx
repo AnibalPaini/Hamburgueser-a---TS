@@ -1,25 +1,41 @@
 const Header = () => {
   return (
-    <header className="flex w-full items-center justify-between px-8 py-4 bg-white shadow-md">
-      <div className="flex items-center">
-        <img src="/logo.png" alt="logo" className="w-16 mr-2" />
-        <div className="flex-col m-0">
-          <h1 className="text-2xl font-bold">Franky</h1>
-          <p className="text-2xl font-bold">Burguer</p>
+    <header className="flex w-full items-center justify-between px-10 py-3 bg-claro border-b-2 border-primary shadow-sm">
+      {/* Logo + Brand */}
+      <div className="flex items-center gap-3 cursor-pointer select-none group">
+        <div className="flex items-center justify-center w-14 h-14 rounded-full bg-primary shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">
+          <img
+            src="/logo.png"
+            alt="logo"
+            className="w-10 h-10 object-contain drop-shadow"
+          />
         </div>
-        
+        <div className="leading-none">
+          <span className="block text-2xl font-black tracking-tight text-primary">
+            Franky
+          </span>
+          <span className="block text-xs font-black tracking-[0.2em] uppercase text-secondary">
+            Burguer
+          </span>
+        </div>
       </div>
 
-      <div className=" ">
-        <nav className="flex space-x-4">
-          <a href="" className="text-gray-700 hover:text-red-500 bg-red-950">Hamburguesas</a>
-          <a href="" className="text-gray-700 hover:text-red-500">Promos</a>
-          <a href="" className="text-gray-700 hover:text-red-500">Combos</a>
-          <a href="" className="text-gray-700 hover:text-red-500">Info</a>
-        </nav>
-      </div>
-      <button className="rounded-b-md rounded-t-md w-24 bg-red-500 text-white hover:bg-red-600">
-        Ordenar
+      {/* Nav */}
+      <nav className="flex items-center gap-1">
+        {["Hamburguesas", "Promos", "Combos", "Info"].map((label) => (
+          <a
+            key={label}
+            href=""
+            className="px-4 py-2 text-sm font-semibold text-gray-700 rounded-lg transition-colors duration-200 hover:text-primary hover:bg-primary/10"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      {/* CTA */}
+      <button className="px-6 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-white bg-primary rounded-md shadow-md hover:bg-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95">
+        🍔 Ordenar
       </button>
     </header>
   );
