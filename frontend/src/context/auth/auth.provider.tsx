@@ -30,6 +30,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         "/api/usuarios/login",
         { email, password },
       );
+      console.log(res);
+      
       dispatch({ type: "SET_USER", payload: res.data.user });
     } catch (error) {
       dispatch({ type: "SET_LOADING", payload: false });
