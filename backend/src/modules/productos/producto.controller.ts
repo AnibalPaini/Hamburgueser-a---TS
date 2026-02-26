@@ -55,7 +55,7 @@ export const postProducto = async (
         });
     }
 
-    if (
+/*     if (
       categoria === "hamburguesa" &&
       (!extrasDisponibles || extrasDisponibles.length === 0)
     ) {
@@ -64,7 +64,7 @@ export const postProducto = async (
         .json({
           error: "Una hamburguesa debe tener al menos un extra disponible",
         });
-    }
+    } */
 
     const nuevoProducto = await productoService.create({
       nombre,
@@ -73,7 +73,6 @@ export const postProducto = async (
       activo: activo ?? true,
       ...(descripcion !== undefined && { descripcion }),
       ...(imagenUrl !== undefined && { imagenUrl }),
-      ...(categoria === "hamburguesa" && { extrasDisponibles }),
     });
 
     res.status(201).json(nuevoProducto);

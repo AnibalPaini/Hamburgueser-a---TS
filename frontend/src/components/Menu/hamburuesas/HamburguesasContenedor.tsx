@@ -1,4 +1,6 @@
 import HamburguesaCard from "./HamburguesasCard";
+import {productoService} from "../../../services/api.products";
+import { useEffect, useState } from "react";
 
 type Hamburguesa = {
   id: number;
@@ -8,43 +10,34 @@ type Hamburguesa = {
   imagen: string;
 };
 
-//Remplazar con fetch a la API cuando esté lista
-const hamburguesas: Hamburguesa[] = [
-  {
-    id: 1,
-    nombre: "La Clásica",
-    descripcion: "Carne 200g, queso cheddar, lechuga, tomate y nuestra salsa especial.",
-    precio: 4500,
-    imagen: "/hamburguesas/clasica.jpg",
-  },
-  {
-    id: 2,
-    nombre: "La Diabla",
-    descripcion: "Doble carne, jalapeños, cheddar derretido, cebolla crocante y salsa picante.",
-    precio: 5800,
-    imagen: "/hamburguesas/diabla.jpg",
-  },
-  {
-    id: 3,
-    nombre: "La Franky",
-    descripcion: "Carne 250g, bacon, huevo frito, cheddar, pickles y mostaza artesanal.",
-    precio: 6200,
-    imagen: "/hamburguesas/franky.jpg",
-  },
-  {
-    id: 4,
-    nombre: "La Veggie",
-    descripcion: "Medallón de lentejas, queso vegano, rúcula, tomate seco y alioli.",
-    precio: 4800,
-    imagen: "/hamburguesas/veggie.jpg",
-  },
-];
-
 const HamburguesasContenedor = () => {
+  //Remplazar con fetch a la API cuando esté lista
+  const fetchHamburguesas = async (): Promise<Hamburguesa[]> => {
+    try {
+      const res = await productoService.getAll();
+      return res.data
+        .filter((p: any) => p.categoria === "hamburguesa")
+        .map((p: any) => ({
+          id: p.id,
+          nombre: p.nombre,
+          descripcion: p.descripcion || "",
+          precio: p.precio,
+          imagen: p.imagenUrl || "",
+        }));
+    } catch (error) {
+      console.error("Error al cargar hamburguesas:", error);
+      return [];
+    }
+  };
+
+  const [hamburguesas, setHamburguesas] = useState<Hamburguesa[]>([]);
+  useEffect(() => {
+    fetchHamburguesas().then(setHamburguesas);
+  }, []);
+
   return (
     <section className="px-10 py-16 bg-claro/90" id="menu">
       <div className="max-w-6xl mx-auto">
-
         {/* Encabezado */}
         <div className="flex flex-col items-center text-center mb-12">
           <span className="inline-block mb-3 px-4 py-1 text-xs font-black uppercase tracking-[0.22em] text-white bg-primary rounded-full shadow-sm">
@@ -68,7 +61,6 @@ const HamburguesasContenedor = () => {
             Ver más
           </button>
         </div>
-
       </div>
     </section>
   );

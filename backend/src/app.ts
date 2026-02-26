@@ -13,7 +13,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //middlewares
-app.use(cors());
+app.use(cors(
+  config.env === "development"
+    ? { origin: "http://localhost:5173", credentials: true }
+    : { origin: config.frontendUrl, credentials: true }
+));
 app.use(cookieParser(config.cookieSecret));                            
 
 

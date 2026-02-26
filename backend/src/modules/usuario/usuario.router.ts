@@ -23,6 +23,9 @@ router.put("/:id", authMiddleware, authorizationMiddleware("admin"), putUsuario)
 router.delete("/:id", authMiddleware, authorizationMiddleware("admin"), deleteUsuario);
 
 router.post("/logout", logout);
+router.get("/auth/me", authMiddleware, (req, res) => {
+  res.json({ user: req.user });
+});
 router.post("/login", login);
 router.post("/register", register);
 
