@@ -8,7 +8,7 @@ const PromocionSchema = new Schema<Promocion>(
 
     tipo: {
       type: String,
-      enum: ["porcentaje", "monto_fijo", "2x1", "combo"],
+      enum: ["porcentaje", "monto_fijo", "2x1", "3x2", "combo"],
       required: true,
     },
 

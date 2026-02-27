@@ -54,7 +54,6 @@ export const createPromocion = async (
     if (
       !nombre ||
       !tipo ||
-      valor === undefined ||
       !alcance ||
       !fechaInicio ||
       !fechaFin ||
@@ -79,7 +78,7 @@ export const createPromocion = async (
       nombre,
       ...(descripcion !== undefined && { descripcion }),
       tipo,
-      valor,
+      ...(valor !== undefined && { valor }),
       alcance,
       ...(categoriasAplicables !== undefined && { categoriasAplicables }),
       ...(productosAplicables !== undefined && { productosAplicables }),

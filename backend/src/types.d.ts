@@ -48,18 +48,14 @@ export interface Promocion {
   id: string;
   nombre: string;
   descripcion?: string;
-
   tipo: TipoPromocion;
-  valor: number;
-
+  valor?: number; // si tipo es "porcentaje", es el % a descontar; si es "monto_fijo", es el monto a descontar; si es "combo", es el precio final del combo
   alcance: AlcancePromocion;
-
   /**
    * Solo si alcance === "categoria".
    * Ej: ["hamburguesa", "papas"]
    */
   categoriasAplicables?: CategoriaProducto[];
-
   /**
    * Solo si alcance === "productos".
    * El admin elige exactamente qué ids entran.

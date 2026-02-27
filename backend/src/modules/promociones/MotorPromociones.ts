@@ -75,6 +75,7 @@ export default class MotorPromociones {
 
     switch (promo.tipo) {
       case "porcentaje": {
+        if (promo.valor === undefined) return null;
         const base = itemsElegibles.reduce(
           (acc, item) => acc + item.precioUnitario * item.cantidad,
           0,
@@ -83,6 +84,7 @@ export default class MotorPromociones {
         break;
       }
       case "monto_fijo": {
+        if (promo.valor === undefined) return null;
         montoDescontado = promo.valor;
         break;
       }
@@ -111,6 +113,7 @@ export default class MotorPromociones {
          * la diferencia entre el subtotal de esos items y el precio del combo
          * es el descuento.
          */
+        if (promo.valor === undefined) return null;
         if (promo.alcance !== "productos" || !promo.productosAplicables) {
           return null;
         }
