@@ -2,13 +2,7 @@ import HamburguesaCard from "./HamburguesasCard";
 import {productoService} from "../../../services/api.products";
 import { useEffect, useState } from "react";
 
-type Hamburguesa = {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  precio: number;
-  imagen: string;
-};
+import type { Hamburguesa } from "../../../types/hamburguesa.type";
 
 const HamburguesasContenedor = () => {
   //Remplazar con fetch a la API cuando esté lista
@@ -16,8 +10,8 @@ const HamburguesasContenedor = () => {
     try {
       const res = await productoService.getAll();
       return res.data
-        .filter((p: any) => p.categoria === "hamburguesa")
-        .map((p: any) => ({
+        .filter((p) => p.categoria === "hamburguesa")
+        .map((p) => ({
           id: p.id,
           nombre: p.nombre,
           descripcion: p.descripcion || "",

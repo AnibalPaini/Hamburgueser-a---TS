@@ -1,10 +1,4 @@
-type Hamburguesa = {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  precio: number;
-  imagen: string;
-};
+import type { Hamburguesa } from "../../../types/hamburguesa.type";
 
 const HamburguesaCard = ({ nombre, descripcion, precio, imagen }: Hamburguesa) => {
   return (
