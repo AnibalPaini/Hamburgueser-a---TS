@@ -12,8 +12,8 @@ export function ProtectedRoute({ children, rol }: ProtectedRouteProps) {
   // Mientras verifica la cookie, no redirigir todavía
   if (state.loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-amber-500" />
+      <div className="flex items-center justify-center min-h-screen bg-claro">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary" />
       </div>
     );
   }

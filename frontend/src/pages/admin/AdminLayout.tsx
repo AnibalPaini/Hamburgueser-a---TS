@@ -1,6 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth.hook";
-import { useEffect } from 'react';
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: "📊", end: true },
@@ -20,24 +19,30 @@ export function AdminLayout() {
     navigate("/");
   };
 
-  useEffect(() => {
-    console.log(state.user);
-    
-  }, [state.user]);
-
   return (
-    <div className="flex min-h-screen bg-gray-950 text-white">
+    <div className="flex min-h-screen bg-claro">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col">
+      <aside className="w-64 bg-secondary flex flex-col shadow-xl">
         {/* Logo */}
-        <div className="p-6 border-b border-gray-800">
+        <div className="p-6 border-b border-claro/10">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
-            <div>
-              <p className="font-bold text-amber-500 text-sm">Panel Admin</p>
-              <p className="text-xs text-gray-400">{state.user?.nombre}</p>
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary shadow-md">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-7 h-7 object-contain"
+              />
+            </div>
+            <div className="leading-none">
+              <p className="font-black text-claro tracking-tight">Franky</p>
+              <p className="text-[10px] font-black tracking-[0.2em] uppercase text-claro/60">
+                Panel Admin
+              </p>
             </div>
           </div>
+          <p className="text-xs text-claro/50 mt-3 truncate">
+            {state.user?.nombre}
+          </p>
         </div>
 
         {/* Nav */}
@@ -48,10 +53,10 @@ export function AdminLayout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? "bg-amber-500 text-gray-900 font-semibold"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    ? "bg-primary text-claro shadow-md"
+                    : "text-claro/60 hover:bg-claro/10 hover:text-claro"
                 }`
               }
             >
@@ -62,10 +67,10 @@ export function AdminLayout() {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-claro/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-400 hover:bg-red-900/30 hover:text-red-400 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-claro/60 hover:bg-primary/80 hover:text-claro transition-all duration-200"
           >
             <span>🚪</span>
             Cerrar sesión
@@ -76,14 +81,20 @@ export function AdminLayout() {
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-14 bg-gray-900 border-b border-gray-800 flex items-center px-6">
-          <h1 className="text-sm text-gray-400">
-            Bienvenido, <span className="text-white font-medium">{state.user?.nombre}</span>
-          </h1>
+        <header className="h-14 bg-claro border-b-2 border-primary/20 flex items-center px-6 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <h1 className="text-sm text-secondary/70 font-semibold">
+              Bienvenido,{" "}
+              <span className="text-secondary font-black">
+                {state.user?.nombre}
+              </span>
+            </h1>
+          </div>
         </header>
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           <Outlet />
         </div>
       </main>
