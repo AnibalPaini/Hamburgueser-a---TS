@@ -38,8 +38,8 @@ const Footer = () => {
         {/* Contacto */}
         <div className="flex flex-col gap-3">
           <h4 className="text-sm font-black uppercase tracking-[0.2em] text-claro/50 mb-1">Contacto</h4>
-          <p className="text-sm text-claro/80">📍 Av. Siempreviva 742, Springfield</p>
-          <p className="text-sm text-claro/80">📞 +54 11 1234-5678</p>
+          <p className="text-sm text-claro/80">📍 Av. San Martin, 123</p>
+          <p className="text-sm text-claro/80">📞 +54 2954 - 123456</p>
           <p className="text-sm text-claro/80">🕐 Lun–Vie: 12:00 – 23:00</p>
           <p className="text-sm text-claro/80">🕐 Sáb–Dom: 12:00 – 00:00</p>
         </div>

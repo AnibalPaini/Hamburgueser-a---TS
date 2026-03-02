@@ -22,6 +22,7 @@ export interface Promocion {
   activa: boolean;
   fechaInicio: string;
   fechaFin: string;
+  imagenUrl?: string;
 }
 
 export type CrearPromocionDTO = Omit<Promocion, "id">;

@@ -20,6 +20,7 @@ const emptyForm: CrearPromocionDTO = {
   activa: true,
   fechaInicio: new Date().toISOString().split("T")[0],
   fechaFin: "",
+  imagenUrl: "",
 };
 
 const categorias: CategoriaProducto[] = [
@@ -57,6 +58,7 @@ export function PromocionesPage() {
       fechaFin: promo.fechaFin.split("T")[0],
       categoriasAplicables: promo.categoriasAplicables,
       productosAplicables: promo.productosAplicables,
+      imagenUrl: promo.imagenUrl ?? "",
     });
     setModal("editar");
   };
@@ -183,9 +185,15 @@ export function PromocionesPage() {
               <select
                 className="w-full bg-white border border-primary/20 text-secondary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 value={form.tipo}
-                onChange={(e) =>
-                  setForm({ ...form, tipo: e.target.value as TipoPromocion })
-                }
+                onChange={(e) => {
+                  const nuevoTipo = e.target.value as TipoPromocion;
+                  setForm({
+                    ...form,
+                    tipo: nuevoTipo,
+                    // Los combos SIEMPRE aplican a productos específicos
+                    alcance: nuevoTipo === "combo" ? "productos" : form.alcance,
+                  });
+                }}
               >
                 <option value="porcentaje">Porcentaje</option>
                 <option value="monto_fijo">Monto fijo</option>
@@ -209,8 +217,9 @@ export function PromocionesPage() {
               )}
 
               <select
-                className="w-full bg-white border border-primary/20 text-secondary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                className="w-full bg-white border border-primary/20 text-secondary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 value={form.alcance}
+                disabled={form.tipo === "combo"}
                 onChange={(e) =>
                   setForm({
                     ...form,
@@ -222,6 +231,12 @@ export function PromocionesPage() {
                 <option value="categoria">Por categoría</option>
                 <option value="productos">Productos específicos</option>
               </select>
+              {form.tipo === "combo" && (
+                <p className="text-xs text-primary/70 font-semibold -mt-1">
+                  Los combos requieren seleccionar los productos que lo
+                  integran.
+                </p>
+              )}
 
               {form.alcance === "categoria" && (
                 <div className="space-y-2">
@@ -256,7 +271,7 @@ export function PromocionesPage() {
                 </div>
               )}
 
-              {form.alcance === "productos" && (
+              {(form.alcance === "productos" || form.tipo === "combo") && (
                 <div className="space-y-2">
                   <label className="text-xs text-secondary/60 font-black uppercase tracking-[0.1em] block">
                     Productos aplicables
@@ -286,6 +301,21 @@ export function PromocionesPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {form.tipo === "combo" && (
+                <div>
+                  <label
+                    htmlFor=""
+                    className="text-xs text-secondary/60 font-black uppercase tracking-[0.1em] mb-1 mt-2 block"
+                  >
+                    Imagen del combo
+                  </label>
+                  <input
+                    type="file"
+                    className="w-full bg-white border border-primary/20 text-secondary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  />
                 </div>
               )}
 

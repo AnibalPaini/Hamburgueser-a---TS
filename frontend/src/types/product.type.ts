@@ -3,6 +3,7 @@ export type CategoriaProducto =
   | "papas"
   | "bebida"
   | "extra"
+  | "combo"
   | "postre";
 
 export interface Producto {
