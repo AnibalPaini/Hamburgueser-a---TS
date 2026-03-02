@@ -6,7 +6,7 @@ export type CategoriaProducto =
   | "postre";
 
 export interface Producto {
-  id: string;
+  _id: string;
   nombre: string;
   descripcion?: string;
   precio: number;
@@ -17,5 +17,5 @@ export interface Producto {
 }
 
 // DTOs para las operaciones
-export type CrearProductoDTO = Omit<Producto, "id">;
+export type CrearProductoDTO = Omit<Producto, "_id">;
 export type ActualizarProductoDTO = Partial<CrearProductoDTO>;

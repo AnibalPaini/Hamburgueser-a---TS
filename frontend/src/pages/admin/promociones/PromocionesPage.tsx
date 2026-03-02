@@ -6,7 +6,8 @@ import type {
   TipoPromocion,
   AlcancePromocion,
 } from "../../../types/promocion.types";
-import { CategoriaProducto } from "../../../types/product.type";
+import type { CategoriaProducto } from "../../../types/product.type";
+import { useProductos } from "../../../hooks/useProductos";
 
 const emptyForm: CrearPromocionDTO = {
   nombre: "",
@@ -21,12 +22,21 @@ const emptyForm: CrearPromocionDTO = {
   fechaFin: "",
 };
 
+const categorias: CategoriaProducto[] = [
+  "hamburguesa",
+  "papas",
+  "bebida",
+  "postre",
+  "extra",
+];
+
 export function PromocionesPage() {
   const { promociones, isLoading, error, crear, actualizar, eliminar } =
     usePromociones();
   const [modal, setModal] = useState<"crear" | "editar" | null>(null);
   const [editando, setEditando] = useState<Promocion | null>(null);
   const [form, setForm] = useState<CrearPromocionDTO>(emptyForm);
+  const { productos } = useProductos();
 
   const abrirCrear = () => {
     setForm(emptyForm);
@@ -149,7 +159,7 @@ export function PromocionesPage() {
 
       {/* Modal */}
       {modal && (
-        <div className="fixed inset-0 bg-secondary/60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-secondary/20 flex items-center justify-center z-50">
           <div className="bg-claro border-t-4 border-primary rounded-xl p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 className="text-secondary font-black text-lg uppercase tracking-[0.1em]">
               {modal === "crear" ? "Nueva promoción" : "Editar promoción"}
@@ -214,20 +224,36 @@ export function PromocionesPage() {
               </select>
 
               {form.alcance === "categoria" && (
-                <select
-                  className="w-full bg-white border border-primary/20 text-secondary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                  value={form.categoriasAplicables || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, categoriasAplicables: e.target.value })
-                  }
-                >
-                  <option value="">Seleccionar categoría</option>
-                  {categorias.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.nombre}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-2">
+                  <label className="text-xs text-secondary/60 font-black uppercase tracking-[0.1em] block">
+                    Categorías aplicables
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {categorias.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            categoriasAplicables:
+                              form.categoriasAplicables.includes(cat)
+                                ? form.categoriasAplicables.filter(
+                                    (c) => c !== cat,
+                                  )
+                                : [...form.categoriasAplicables, cat],
+                          })
+                        }
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          form.categoriasAplicables.includes(cat)
+                            ? "bg-primary text-claro"
+                            : "bg-secondary/10 text-secondary"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {form.alcance === "productos" && (
@@ -238,21 +264,20 @@ export function PromocionesPage() {
                   <div className="flex flex-wrap gap-2">
                     {productos.map((producto) => (
                       <button
-                        key={producto.id}
+                        key={producto._id}
                         onClick={() =>
                           setForm({
                             ...form,
-                            productosAplicables: form.productosAplicables.includes(
-                              producto.id
-                            )
-                              ? form.productosAplicables.filter(
-                                  (id) => id !== producto.id
-                                )
-                              : [...form.productosAplicables, producto.id],
+                            productosAplicables:
+                              form.productosAplicables.includes(producto._id)
+                                ? form.productosAplicables.filter(
+                                    (id) => id !== producto._id,
+                                  )
+                                : [...form.productosAplicables, producto._id],
                           })
                         }
                         className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                          form.productosAplicables.includes(producto.id)
+                          form.productosAplicables.includes(producto._id)
                             ? "bg-primary text-claro"
                             : "bg-secondary/10 text-secondary"
                         }`}

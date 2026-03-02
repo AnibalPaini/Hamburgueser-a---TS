@@ -27,11 +27,13 @@ export function AdminLayout() {
         <div className="p-6 border-b border-claro/10">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary shadow-md">
-              <img
-                src="/logo.png"
-                alt="Logo"
-                className="w-7 h-7 object-contain"
-              />
+              <a href="/">
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  className="w-7 h-7 object-contain"
+                />
+              </a>
             </div>
             <div className="leading-none">
               <p className="font-black text-claro tracking-tight">Franky</p>

@@ -64,6 +64,7 @@ export interface Promocion {
   productosAplicables?: string[];
 
   activa: boolean;
+  imagenUrl?: string;
   fechaInicio: Date;
   fechaFin: Date;
 }

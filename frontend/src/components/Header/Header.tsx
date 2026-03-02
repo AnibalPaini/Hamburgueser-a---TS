@@ -1,4 +1,7 @@
+import { useAuth } from "../../context/auth/auth.hook";
+
 const Header = () => {
+  const { state } = useAuth();
   return (
     <header className="flex w-full items-center justify-between px-10 py-3 bg-claro border-b-2 border-primary shadow-sm">
       {/* Logo + Brand */}
@@ -34,9 +37,19 @@ const Header = () => {
       </nav>
 
       {/* CTA */}
-      <button className="px-6 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-white bg-primary rounded-md shadow-md hover:bg-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95">
-        🍔 Ordenar
-      </button>
+      <div>
+        <button className="px-6 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-white bg-primary rounded-md shadow-md hover:bg-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95">
+          🍔 Ordenar
+        </button>
+        {state.user?.rol === "admin" && (
+          <a
+            href="/admin"
+            className="px-4 py-2 text-sm font-semibold text-gray-700 rounded-lg transition-colors duration-200 hover:text-primary hover:bg-primary/10 ml-2"
+          >
+            Admin
+          </a>
+        )}
+      </div>
     </header>
   );
 };

@@ -50,6 +50,7 @@ export const createPromocion = async (
       activa,
       fechaInicio,
       fechaFin,
+      imagenUrl,
     } = req.body;
     if (
       !nombre ||
@@ -85,6 +86,7 @@ export const createPromocion = async (
       activa,
       fechaInicio,
       fechaFin,
+      ...(imagenUrl !== undefined && { imagenUrl }),
     });
     res.status(201).json(nuevaPromocion);
   } catch (error) {
