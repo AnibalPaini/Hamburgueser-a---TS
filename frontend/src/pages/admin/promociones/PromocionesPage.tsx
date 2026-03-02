@@ -6,6 +6,7 @@ import type {
   TipoPromocion,
   AlcancePromocion,
 } from "../../../types/promocion.types";
+import { CategoriaProducto } from "../../../types/product.type";
 
 const emptyForm: CrearPromocionDTO = {
   nombre: "",
@@ -13,6 +14,8 @@ const emptyForm: CrearPromocionDTO = {
   tipo: "porcentaje",
   valor: 0,
   alcance: "todos",
+  categoriasAplicables: [],
+  productosAplicables: [],
   activa: true,
   fechaInicio: new Date().toISOString().split("T")[0],
   fechaFin: "",
@@ -42,6 +45,8 @@ export function PromocionesPage() {
       activa: promo.activa,
       fechaInicio: promo.fechaInicio.split("T")[0],
       fechaFin: promo.fechaFin.split("T")[0],
+      categoriasAplicables: promo.categoriasAplicables,
+      productosAplicables: promo.productosAplicables,
     });
     setModal("editar");
   };
@@ -207,6 +212,57 @@ export function PromocionesPage() {
                 <option value="categoria">Por categoría</option>
                 <option value="productos">Productos específicos</option>
               </select>
+
+              {form.alcance === "categoria" && (
+                <select
+                  className="w-full bg-white border border-primary/20 text-secondary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  value={form.categoriasAplicables || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, categoriasAplicables: e.target.value })
+                  }
+                >
+                  <option value="">Seleccionar categoría</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {form.alcance === "productos" && (
+                <div className="space-y-2">
+                  <label className="text-xs text-secondary/60 font-black uppercase tracking-[0.1em] block">
+                    Productos aplicables
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {productos.map((producto) => (
+                      <button
+                        key={producto.id}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            productosAplicables: form.productosAplicables.includes(
+                              producto.id
+                            )
+                              ? form.productosAplicables.filter(
+                                  (id) => id !== producto.id
+                                )
+                              : [...form.productosAplicables, producto.id],
+                          })
+                        }
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          form.productosAplicables.includes(producto.id)
+                            ? "bg-primary text-claro"
+                            : "bg-secondary/10 text-secondary"
+                        }`}
+                      >
+                        {producto.nombre}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
