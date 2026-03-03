@@ -78,6 +78,17 @@ export default class OrdenService {
               `Uno o más extras de la hamburguesa ${producto.nombre} no son válidos`,
             );
           }
+
+          // Verificar que ningún extra esté en la lista de bloqueados
+          const excluidos = producto.extrasExcluidos ?? [];
+          const extraBloqueado = item.extrasIds.find((eid) =>
+            excluidos.includes(eid),
+          );
+          if (extraBloqueado) {
+            throw new Error(
+              `El extra ${extraBloqueado} no está disponible para la hamburguesa ${producto.nombre}`,
+            );
+          }
         }
       }
 
@@ -111,8 +122,8 @@ export default class OrdenService {
         activo: p.activo,
         ...(p.descripcion !== undefined && { descripcion: p.descripcion }),
         ...(p.imagenUrl !== undefined && { imagenUrl: p.imagenUrl }),
-        ...(p.extrasDisponibles?.length && {
-          extrasDisponibles: p.extrasDisponibles,
+        ...(p.extrasExcluidos?.length && {
+          extrasExcluidos: p.extrasExcluidos,
         }),
       }));
 

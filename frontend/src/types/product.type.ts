@@ -14,7 +14,7 @@ export interface Producto {
   categoria: CategoriaProducto;
   activo: boolean;
   imagenUrl?: string;
-  extrasDisponibles?: string[]; // solo para hamburguesas, ids de productos con categoria "extra"
+  extrasExcluidos?: string[]; // solo para hamburguesas: ids de extras BLOQUEADOS; vacío = todos disponibles
 }
 
 // DTOs para las operaciones

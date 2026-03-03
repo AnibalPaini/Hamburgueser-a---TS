@@ -42,6 +42,7 @@ const PromocionSchema = new Schema<Promocion>(
     activa: { type: Boolean, default: true },
     fechaInicio: { type: Date, required: true },
     fechaFin: { type: Date, required: true },
+    imagenUrl: { type: String, trim: true },
   },
   { timestamps: true },
 );

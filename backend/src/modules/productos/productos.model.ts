@@ -12,7 +12,7 @@ const productoSchema = new mongoose.Schema<Producto>({
   descripcion: { type: String },
   imagenUrl: { type: String },
   activo: { type: Boolean, default: true },
-  extrasDisponibles: { type: [String], default: undefined },
+  extrasExcluidos: { type: [String], default: undefined }, // ids de extras bloqueados; vacío = todos disponibles
 });
 
 const ProductoModel = mongoose.model<Producto>("Producto", productoSchema);

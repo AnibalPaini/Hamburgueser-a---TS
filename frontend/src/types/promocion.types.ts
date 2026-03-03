@@ -27,3 +27,10 @@ export interface Promocion {
 
 export type CrearPromocionDTO = Omit<Promocion, "id">;
 export type ActualizarPromocionDTO = Partial<CrearPromocionDTO>;
+export interface PromocionAplicada {
+  promocionId: string;
+  nombre: string;
+  tipo: TipoPromocion;
+  montoDescontado: number;
+  itemsAfectados: string[]; // ids de los ItemOrden afectados
+}

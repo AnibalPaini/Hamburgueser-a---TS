@@ -1,5 +1,6 @@
 import type { Producto } from "../../../types/product.type";
 import type { PromoInfo } from "./HamburguesasContenedor";
+import { useNavigate } from "react-router-dom";
 
 interface HamburguesaCardProps extends Producto {
   promo?: PromoInfo;
@@ -16,12 +17,14 @@ function calcularPrecioFinal(precio: number, promo: PromoInfo): number {
 }
 
 const HamburguesaCard = ({
+  _id,
   nombre,
   descripcion,
   precio,
   imagenUrl,
   promo,
 }: HamburguesaCardProps) => {
+  const navigate = useNavigate();
   const tieneDescuentoPrecio =
     promo && (promo.tipo === "porcentaje" || promo.tipo === "monto_fijo");
   const precioFinal = tieneDescuentoPrecio
@@ -29,7 +32,9 @@ const HamburguesaCard = ({
     : precio;
 
   return (
-    <div className="group flex flex-col bg-claro rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-primary/10">
+    <div className="group flex flex-col bg-claro rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-primary/10"
+      onClick={() => navigate(`/menu/hamburguesas/${_id}`)}
+    >
       {/* Imagen */}
       <div className="relative overflow-hidden h-52 bg-primary/5">
         <img

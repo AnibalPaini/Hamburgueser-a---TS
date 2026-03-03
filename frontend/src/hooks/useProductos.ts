@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { productoService } from "../services/api.products";
-import type { Producto, CrearProductoDTO, ActualizarProductoDTO } from "../types/product.type";
+import type {
+  Producto,
+  CrearProductoDTO,
+  ActualizarProductoDTO,
+} from "../types/product.type";
 
 export function useProductos() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -14,7 +18,9 @@ export function useProductos() {
       const res = await productoService.getAll();
       setProductos(res.data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al cargar productos");
+      setError(
+        err instanceof Error ? err.message : "Error al cargar productos",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -31,13 +37,21 @@ export function useProductos() {
 
   const actualizar = async (id: string, data: ActualizarProductoDTO) => {
     const res = await productoService.update(id, data);
-    setProductos((prev) => prev.map((p) => (p.id === id ? res.data : p)));
+    setProductos((prev) => prev.map((p) => (p._id === id ? res.data : p)));
   };
 
   const eliminar = async (id: string) => {
     await productoService.delete(id);
-    setProductos((prev) => prev.filter((p) => p.id !== id));
+    setProductos((prev) => prev.filter((p) => p._id !== id));
   };
 
-  return { productos, isLoading, error, crear, actualizar, eliminar, refetch: fetchProductos };
+  return {
+    productos,
+    isLoading,
+    error,
+    crear,
+    actualizar,
+    eliminar,
+    refetch: fetchProductos,
+  };
 }

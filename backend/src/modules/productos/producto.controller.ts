@@ -22,6 +22,7 @@ export const getProductoById = async (
 ) => {
   try {
     const { id } = req.params;
+    console.log("ID recibido:", id); // Log para verificar el ID recibido
     const producto = await productoService.getById(id);
     if (!producto) {
       return res.status(404).json({ error: "Producto no encontrado" });
@@ -33,29 +34,20 @@ export const getProductoById = async (
 };
 
 export const postProducto = async (
-  req: Request<{}, {}, ProductoCreateBody & { extrasDisponibles?: string[] }>,
+  req: Request<{}, {}, ProductoCreateBody & { extrasExcluidos?: string[] }>,
   res: Response,
 ) => {
   try {
-    const {
-      nombre,
-      precio,
-      categoria,
-      descripcion,
-      activo,
-      imagenUrl,
-      extrasDisponibles,
-    } = req.body;
+    const { nombre, precio, categoria, descripcion, activo, imagenUrl } =
+      req.body;
 
     if (!nombre || !precio || !categoria) {
-      return res
-        .status(400)
-        .json({
-          error: "Faltan campos obligatorios: nombre, precio, categoria",
-        });
+      return res.status(400).json({
+        error: "Faltan campos obligatorios: nombre, precio, categoria",
+      });
     }
 
-/*     if (
+    /*     if (
       categoria === "hamburguesa" &&
       (!extrasDisponibles || extrasDisponibles.length === 0)
     ) {
@@ -94,7 +86,7 @@ export const putProducto = async (
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    res.json({ message: "Producto actualizado", data: productoActualizado });
+    res.json(productoActualizado);
   } catch (error) {
     res.status(500).json({ error: "Error al actualizar el producto" });
   }

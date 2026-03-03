@@ -23,6 +23,7 @@ const CombosCard = ({
   tipo,
   valor,
   fechaFin,
+  imagenUrl
 }: Promocion) => {
   const fechaFormateada = new Date(fechaFin).toLocaleDateString("es-AR", {
     day: "2-digit",
@@ -34,7 +35,11 @@ const CombosCard = ({
     <div className="group flex flex-col bg-claro rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-primary/10">
       {/* Banner superior con degradado */}
       <div className="relative h-32 bg-linear-to-br from-primary to-secondary flex items-center justify-center">
-        <span className="text-5xl">🍔</span>
+        {imagenUrl ? (
+          <img src={imagenUrl} alt={nombre} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-5xl">🍔</span>
+        )}
         {/* Badge descuento */}
         <span className="absolute top-3 right-3 bg-white text-primary text-sm font-black px-3 py-1 rounded-full shadow-md">
           {formatDescuento(tipo, valor)}

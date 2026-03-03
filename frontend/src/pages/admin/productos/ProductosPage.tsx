@@ -21,6 +21,7 @@ const emptyForm: CrearProductoDTO = {
   categoria: "hamburguesa",
   activo: true,
   imagenUrl: "",
+  extrasExcluidos: [],
 };
 
 export function ProductosPage() {
@@ -47,10 +48,11 @@ export function ProductosPage() {
     setForm({
       nombre: producto.nombre,
       descripcion: producto.descripcion ?? "",
-      precio: producto.precio,
+      precio: producto.precio ?? 0,
       categoria: producto.categoria,
       activo: producto.activo,
       imagenUrl: producto.imagenUrl ?? "",
+      extrasExcluidos: producto.extrasExcluidos ?? [],
     });
     setModal("editar");
   };
@@ -59,7 +61,7 @@ export function ProductosPage() {
     if (modal === "crear") {
       await crear(form);
     } else if (modal === "editar" && editando) {
-      await actualizar(editando.id, form);
+      await actualizar(editando._id, form);
     }
     setModal(null);
   };
@@ -98,7 +100,7 @@ export function ProductosPage() {
           <button
             key={cat}
             onClick={() => setFiltro(cat as typeof filtro)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-[0.1em] transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-200 ${
               filtro === cat
                 ? "bg-primary text-claro shadow-sm"
                 : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
@@ -114,19 +116,19 @@ export function ProductosPage() {
         <table className="w-full text-sm">
           <thead className="bg-secondary text-claro">
             <tr>
-              <th className="text-left p-4 font-black uppercase tracking-[0.1em] text-xs">
+              <th className="text-left p-4 font-black uppercase tracking-widest text-xs">
                 Producto
               </th>
-              <th className="text-left p-4 font-black uppercase tracking-[0.1em] text-xs">
+              <th className="text-left p-4 font-black uppercase tracking-widest text-xs">
                 Categoría
               </th>
-              <th className="text-left p-4 font-black uppercase tracking-[0.1em] text-xs">
+              <th className="text-left p-4 font-black uppercase tracking-widest text-xs">
                 Precio
               </th>
-              <th className="text-left p-4 font-black uppercase tracking-[0.1em] text-xs">
+              <th className="text-left p-4 font-black uppercase tracking-widest text-xs">
                 Estado
               </th>
-              <th className="text-left p-4 font-black uppercase tracking-[0.1em] text-xs">
+              <th className="text-left p-4 font-black uppercase tracking-widest text-xs">
                 Acciones
               </th>
             </tr>
@@ -134,7 +136,7 @@ export function ProductosPage() {
           <tbody>
             {productosFiltrados.map((producto) => (
               <tr
-                key={producto.id}
+                key={producto._id}
                 className="border-t border-primary/10 hover:bg-primary/5 transition-colors"
               >
                 <td className="p-4">
@@ -164,7 +166,7 @@ export function ProductosPage() {
                   </span>
                 </td>
                 <td className="p-4 text-secondary font-bold">
-                  ${producto.precio.toFixed(2)}
+                  ${(producto.precio ?? 0).toFixed(2)}
                 </td>
                 <td className="p-4">
                   <span
@@ -182,7 +184,7 @@ export function ProductosPage() {
                       Editar
                     </button>
                     <button
-                      onClick={() => eliminar(producto.id)}
+                      onClick={() => eliminar(producto._id)}
                       className="text-xs bg-primary/10 hover:bg-primary text-primary hover:text-claro px-3 py-1.5 rounded-lg font-semibold transition-all duration-200"
                     >
                       Eliminar
@@ -199,7 +201,7 @@ export function ProductosPage() {
       {modal && (
         <div className="fixed inset-0 bg-secondary/60 flex items-center justify-center z-50">
           <div className="bg-claro border-t-4 border-primary rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl">
-            <h3 className="text-secondary font-black text-lg uppercase tracking-[0.1em]">
+            <h3 className="text-secondary font-black text-lg uppercase tracking-widest">
               {modal === "crear" ? "Nuevo producto" : "Editar producto"}
             </h3>
 
@@ -262,6 +264,70 @@ export function ProductosPage() {
                 />
                 Activo
               </label>
+
+              {/* Extras excluidos — solo hamburguesas */}
+              {form.categoria === "hamburguesa" &&
+                (() => {
+                  const extrasDisponibles = productos.filter(
+                    (p) => p.categoria === "extra" && p.activo,
+                  );
+                  if (extrasDisponibles.length === 0) return null;
+                  const excluidos = form.extrasExcluidos ?? [];
+                  const toggleExcluido = (id: string) =>
+                    setForm({
+                      ...form,
+                      extrasExcluidos: excluidos.includes(id)
+                        ? excluidos.filter((e) => e !== id)
+                        : [...excluidos, id],
+                    });
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-xs font-black text-secondary/60 uppercase tracking-widest">
+                        Extras bloqueados
+                        <span className="normal-case font-normal ml-1 text-secondary/40">
+                          (los marcados NO estarán disponibles)
+                        </span>
+                      </p>
+                      <div className="max-h-40 overflow-y-auto flex flex-col gap-1 border border-primary/10 rounded-lg p-2">
+                        {extrasDisponibles.map((extra) => {
+                          const bloqueado = excluidos.includes(extra._id);
+                          return (
+                            <label
+                              key={extra._id}
+                              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                                bloqueado
+                                  ? "bg-primary/15 text-primary"
+                                  : "hover:bg-secondary/5 text-secondary"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={bloqueado}
+                                  onChange={() => toggleExcluido(extra._id)}
+                                  className="accent-primary shrink-0"
+                                />
+                                <span className="text-sm font-semibold truncate">
+                                  {extra.nombre}
+                                </span>
+                              </div>
+                              <span className="text-xs font-black shrink-0 text-secondary/50">
+                                ${extra.precio}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {excluidos.length > 0 && (
+                        <p className="text-xs text-primary font-semibold">
+                          {excluidos.length} extra
+                          {excluidos.length > 1 ? "s" : ""} bloqueado
+                          {excluidos.length > 1 ? "s" : ""}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -273,7 +339,7 @@ export function ProductosPage() {
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 bg-primary hover:bg-secondary text-claro font-black py-2 rounded-lg text-sm transition-all duration-200 active:scale-95 uppercase tracking-[0.1em]"
+                className="flex-1 bg-primary hover:bg-secondary text-claro font-black py-2 rounded-lg text-sm transition-all duration-200 active:scale-95 uppercase tracking-widest"
               >
                 {modal === "crear" ? "Crear" : "Guardar"}
               </button>
