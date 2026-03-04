@@ -1,7 +1,13 @@
 import { useAuth } from "../../context/auth/auth.hook";
+import { useCarrito } from "../../context/carrito/cart.hook";
 
-const Header = () => {
+interface Props {
+  onCartOpen: () => void;
+}
+
+const Header = ({ onCartOpen }: Props) => {
   const { state } = useAuth();
+  const { totalItems } = useCarrito();
   return (
     <header className="flex w-full items-center justify-between px-10 py-3 bg-claro border-b-2 border-primary shadow-sm">
       {/* Logo + Brand */}
@@ -37,14 +43,27 @@ const Header = () => {
       </nav>
 
       {/* CTA */}
-      <div>
+      <div className="flex items-center gap-2">
+        {/* Carrito */}
+        <button
+          onClick={onCartOpen}
+          className="relative px-4 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-primary border-2 border-primary rounded-md hover:bg-primary hover:text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+        >
+          🛒 Carrito
+          {totalItems > 0 && (
+            <span className="absolute -top-2 -right-2 bg-secondary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+              {totalItems}
+            </span>
+          )}
+        </button>
+
         <button className="px-6 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-white bg-primary rounded-md shadow-md hover:bg-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95">
           🍔 Ordenar
         </button>
         {state.user?.rol === "admin" && (
           <a
             href="/admin"
-            className="px-4 py-2 text-sm font-semibold text-gray-700 rounded-lg transition-colors duration-200 hover:text-primary hover:bg-primary/10 ml-2"
+            className="px-4 py-2 text-sm font-semibold text-gray-700 rounded-lg transition-colors duration-200 hover:text-primary hover:bg-primary/10"
           >
             Admin
           </a>

@@ -1,4 +1,7 @@
 // Espejo de: backend/src/types.d.ts
+import type { Cliente, TipoEntrega } from "./cliente.type";
+
+export type { Cliente, TipoEntrega };
 
 export type EstadoOrden =
   | "pendiente"
@@ -7,11 +10,16 @@ export type EstadoOrden =
   | "entregado"
   | "cancelado";
 
+export interface ExtraItem {
+  extraId: string;
+  cantidad: number;
+}
+
 export interface ItemOrden {
   productoId: string;
   cantidad: number;
   precioUnitario: number;
-  extrasIds?: string[];
+  extras?: ExtraItem[];
 }
 
 export interface PromocionAplicada {
@@ -25,6 +33,8 @@ export interface PromocionAplicada {
 export interface Orden {
   id: string;
   items: ItemOrden[];
+  cliente: Cliente;
+  tipoEntrega: TipoEntrega;
   promocionesAplicadas: PromocionAplicada[];
   subtotal: number;
   descuentoTotal: number;

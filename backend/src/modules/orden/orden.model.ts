@@ -3,17 +3,50 @@ import type { Orden } from "../../types.js";
 
 const OrdenSchema = new mongoose.Schema<Orden>(
   {
+    cliente: {
+      nombre: { type: String, required: true },
+      email: { type: String, required: true },
+      telefono: { type: String, required: true },
+      domicilio: {
+        type: new mongoose.Schema(
+          {
+            direccion: { type: String, required: true },
+            altura: { type: String, required: true },
+            piso: { type: String },
+            departamento: { type: String },
+          },
+          { _id: false },
+        ),
+        required: false,
+      },
+    },
+    tipoEntrega: {
+      type: String,
+      enum: ["retiro", "envio"],
+      required: true,
+    },
     items: [
       {
         productoId: { type: String, required: true },
         cantidad: { type: Number, required: true, min: 1 },
         precioUnitario: { type: Number, required: true, min: 0 },
-        extrasIds: [{ type: String }],
+        extras: [
+          {
+            extraId: { type: String, required: true },
+            cantidad: { type: Number, required: true, min: 1 },
+          },
+        ],
       },
     ],
     estado: {
       type: String,
-      enum: ["pendiente", "en_preparacion", "listo_para_entregar", "entregado", "cancelado"],
+      enum: [
+        "pendiente",
+        "en_preparacion",
+        "listo_para_entregar",
+        "entregado",
+        "cancelado",
+      ],
       default: "pendiente",
     },
     subtotal: { type: Number, required: true, min: 0 },

@@ -1,11 +1,20 @@
 import OrdenModel from "./orden.model.js";
-import type { ItemOrden, EstadoOrden, Orden } from "../../types.js";
+import type {
+  ItemOrden,
+  EstadoOrden,
+  Orden,
+  Cliente,
+  TipoEntrega,
+  Promocion,
+} from "../../types.js";
 import MotorPromociones from "../promociones/MotorPromociones.js";
 import ProductoModel from "../productos/productos.model.js";
 import PromocionModel from "../promociones/promocion.model.js";
 
 type OrdenCreateBody = {
-  items: Pick<ItemOrden, "productoId" | "cantidad" | "extrasIds">[];
+  items: Pick<ItemOrden, "productoId" | "cantidad" | "extras">[];
+  cliente: Cliente;
+  tipoEntrega: TipoEntrega;
 };
 
 export default class OrdenService {
@@ -15,6 +24,8 @@ export default class OrdenService {
       return ordenes.map((orden) => ({
         id: orden._id.toString(),
         items: orden.items,
+        cliente: orden.cliente,
+        tipoEntrega: orden.tipoEntrega,
         estado: orden.estado,
         subtotal: orden.subtotal,
         descuentoTotal: orden.descuentoTotal,
@@ -33,6 +44,8 @@ export default class OrdenService {
       return {
         id: orden._id.toString(),
         items: orden.items,
+        cliente: orden.cliente,
+        tipoEntrega: orden.tipoEntrega,
         estado: orden.estado,
         subtotal: orden.subtotal,
         descuentoTotal: orden.descuentoTotal,
@@ -47,11 +60,23 @@ export default class OrdenService {
 
   async createOrden(data: OrdenCreateBody): Promise<Orden> {
     try {
-      // 1. Buscar todos los productos de la orden en paralelo
+      // 1. Buscar productos y extras en paralelo (nunca confiar en precios del cliente)
       const productosIds = data.items.map((i) => i.productoId);
-      const productosEncontrados = await ProductoModel.find({
-        _id: { $in: productosIds },
-      }).lean();
+      const extrasUnicosIds = [
+        ...new Set(
+          data.items.flatMap((i) => (i.extras ?? []).map((e) => e.extraId)),
+        ),
+      ];
+      const [productosEncontrados, todosExtrasEncontrados] = await Promise.all([
+        ProductoModel.find({ _id: { $in: productosIds } }).lean(),
+        extrasUnicosIds.length
+          ? ProductoModel.find({
+              _id: { $in: extrasUnicosIds },
+              categoria: "extra",
+              activo: true,
+            }).lean()
+          : Promise.resolve([]),
+      ]);
 
       // 2. Validar que todos los productos existen y están activos
       for (const item of data.items) {
@@ -66,14 +91,13 @@ export default class OrdenService {
         }
 
         // 3. Validar extras si es hamburguesa
-        if (producto.categoria === "hamburguesa" && item.extrasIds?.length) {
-          const extrasEncontrados = await ProductoModel.find({
-            _id: { $in: item.extrasIds },
-            categoria: "extra",
-            activo: true,
-          }).lean();
+        if (producto.categoria === "hamburguesa" && item.extras?.length) {
+          const idsExtrasItem = [...new Set(item.extras.map((e) => e.extraId))];
 
-          if (extrasEncontrados.length !== item.extrasIds.length) {
+          const extrasValidos = idsExtrasItem.filter((eid) =>
+            todosExtrasEncontrados.some((ex) => ex._id.toString() === eid),
+          );
+          if (extrasValidos.length !== idsExtrasItem.length) {
             throw new Error(
               `Uno o más extras de la hamburguesa ${producto.nombre} no son válidos`,
             );
@@ -81,7 +105,7 @@ export default class OrdenService {
 
           // Verificar que ningún extra esté en la lista de bloqueados
           const excluidos = producto.extrasExcluidos ?? [];
-          const extraBloqueado = item.extrasIds.find((eid) =>
+          const extraBloqueado = idsExtrasItem.find((eid) =>
             excluidos.includes(eid),
           );
           if (extraBloqueado) {
@@ -92,16 +116,22 @@ export default class OrdenService {
         }
       }
 
-      // 4. Construir items con el precio real de la base (nunca confiar en el cliente)
+      // 4. Construir items con el precio real (base + suma de extras × su cantidad)
       const itemsConPrecio: ItemOrden[] = data.items.map((item) => {
         const producto = productosEncontrados.find(
           (p) => p._id.toString() === item.productoId,
         )!;
+        const precioExtras = (item.extras ?? []).reduce((acc, e) => {
+          const extra = todosExtrasEncontrados.find(
+            (ex) => ex._id.toString() === e.extraId,
+          );
+          return acc + (extra?.precio ?? 0) * e.cantidad;
+        }, 0);
         return {
           productoId: item.productoId,
           cantidad: item.cantidad,
-          precioUnitario: producto.precio,
-          ...(item.extrasIds?.length && { extrasIds: item.extrasIds }),
+          precioUnitario: producto.precio + precioExtras,
+          ...(item.extras?.length && { extras: item.extras }),
         };
       });
 
@@ -146,13 +176,21 @@ export default class OrdenService {
 
       // 7. Aplicar motor de promociones
       const ordenCalculada = MotorPromociones.aplicarPromociones(
-        { id: "", items: itemsConPrecio, estado: "pendiente" },
-        promociones,
+        {
+          id: "",
+          items: itemsConPrecio,
+          estado: "pendiente",
+          cliente: data.cliente,
+          tipoEntrega: data.tipoEntrega,
+        },
+        promociones as Promocion[],
         catalogo,
       );
 
       // 8. Guardar la orden final en la base
       const ordenGuardada = await OrdenModel.create({
+        cliente: data.cliente,
+        tipoEntrega: data.tipoEntrega,
         items: ordenCalculada.items,
         estado: "pendiente",
         subtotal: ordenCalculada.subtotal,
@@ -164,6 +202,8 @@ export default class OrdenService {
       return {
         id: ordenGuardada._id.toString(),
         items: ordenGuardada.items,
+        cliente: ordenGuardada.cliente,
+        tipoEntrega: ordenGuardada.tipoEntrega,
         estado: ordenGuardada.estado,
         subtotal: ordenGuardada.subtotal,
         descuentoTotal: ordenGuardada.descuentoTotal,
@@ -186,6 +226,8 @@ export default class OrdenService {
       return {
         id: orden._id.toString(),
         items: orden.items,
+        cliente: orden.cliente,
+        tipoEntrega: orden.tipoEntrega,
         estado: orden.estado,
         subtotal: orden.subtotal,
         descuentoTotal: orden.descuentoTotal,

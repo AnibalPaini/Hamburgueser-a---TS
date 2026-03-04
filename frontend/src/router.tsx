@@ -1,5 +1,6 @@
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import { AuthProvider } from "./context/auth/auth.provider";
+import { CartProvider } from "./context/carrito/cart.provider";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import { DashboardPage } from "./pages/admin/dashboard/DashboardPage";
@@ -17,7 +18,9 @@ export const router = createBrowserRouter([
     // ← sin path, es el layout raíz
     element: (
       <AuthProvider>
-        <Outlet />
+        <CartProvider>
+          <Outlet />
+        </CartProvider>
       </AuthProvider>
     ),
     children: [

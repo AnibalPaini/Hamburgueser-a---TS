@@ -5,7 +5,19 @@ import OrdenService from "./orden.services.js";
 const ordenService = new OrdenService();
 
 type OrdenCreateBody = {
-  items: Pick<ItemOrden, "productoId" | "cantidad" | "extrasIds">[];
+  items: Pick<ItemOrden, "productoId" | "cantidad" | "extras">[];
+  cliente: {
+    nombre: string;
+    email: string;
+    telefono: string;
+    domicilio?: {
+      direccion: string;
+      altura: string;
+      piso?: string;
+      departamento?: string;
+    };
+  };
+  tipoEntrega: "retiro" | "envio";
 };
 
 export const getOrdenes = async (req: Request, res: Response) => {
@@ -22,7 +34,7 @@ export const getOrdenById = async (
   res: Response,
 ) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     if (!id) return res.status(400).json({ error: "El campo id es requerido" });
     const orden = await ordenService.getOrdenById(id);
     if (!orden) return res.status(404).json({ error: "Orden no encontrada" });
@@ -37,13 +49,40 @@ export const createOrden = async (
   res: Response,
 ) => {
   try {
-    const { items } = req.body;
+    const { items, cliente, tipoEntrega } = req.body;
     if (!items?.length) {
       return res
         .status(400)
         .json({ error: "La orden debe tener al menos un item" });
     }
-    const nuevaOrden = await ordenService.createOrden({ items });
+    if (!cliente?.nombre || !cliente?.email || !cliente?.telefono) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Faltan datos del cliente: nombre, email y teléfono son requeridos",
+        });
+    }
+    if (!tipoEntrega || !["retiro", "envio"].includes(tipoEntrega)) {
+      return res
+        .status(400)
+        .json({ error: "El tipo de entrega debe ser 'retiro' o 'envio'" });
+    }
+    if (
+      tipoEntrega === "envio" &&
+      (!cliente.domicilio?.direccion || !cliente.domicilio?.altura)
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: "Para envío a domicilio se requieren dirección y altura",
+        });
+    }
+    const nuevaOrden = await ordenService.createOrden({
+      items,
+      cliente,
+      tipoEntrega,
+    });
     res.status(201).json(nuevaOrden);
   } catch (error) {
     res.status(500).json({ error: "Error al crear la orden" });

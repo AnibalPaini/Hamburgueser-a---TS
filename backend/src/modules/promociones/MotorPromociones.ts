@@ -94,15 +94,18 @@ export default class MotorPromociones {
          * Por cada par de unidades elegibles, la de menor precio es gratis.
          * Funciona con múltiples productos distintos o el mismo repetido.
          */
+        // Por cada 2 unidades elegibles, la de MENOR precio es gratis.
+        // Con n unidades, hay floor(n/2) gratis: siempre las más baratas.
         const unidades: number[] = [];
         for (const item of itemsElegibles) {
           for (let i = 0; i < item.cantidad; i++) {
             unidades.push(item.precioUnitario);
           }
         }
-        unidades.sort((a, b) => b - a); // ordenar de mayor a menor
-        for (let i = 1; i < unidades.length; i += 2) {
-          montoDescontado += unidades[i] ?? 0; // el de menor precio en cada par
+        unidades.sort((a, b) => a - b); // ASC: más baratas primero
+        const libres2x1 = Math.floor(unidades.length / 2);
+        for (let i = 0; i < libres2x1; i++) {
+          montoDescontado += unidades[i]; // las libres2x1 más baratas son gratis
         }
         break;
       }
@@ -137,16 +140,18 @@ export default class MotorPromociones {
          * Por cada trio de unidades elegibles, la de menor precio es gratis.
          * Funciona con múltiples productos distintos o el mismo repetido.
          */
+        // Por cada 3 unidades elegibles, la de MENOR precio es gratis.
+        // Con n unidades, hay floor(n/3) gratis: siempre las más baratas.
         const unidades_3x2: number[] = [];
         for (const item of itemsElegibles) {
           for (let i = 0; i < item.cantidad; i++) {
             unidades_3x2.push(item.precioUnitario);
           }
         }
-        unidades_3x2.sort((a, b) => b - a); // ordenar de mayor a menor
-
-        for (let i = 2; i < unidades_3x2.length; i += 3) {
-          montoDescontado += unidades_3x2[i] ?? 0; // el de menor precio en cada trio
+        unidades_3x2.sort((a, b) => a - b); // ASC: más baratas primero
+        const libres3x2 = Math.floor(unidades_3x2.length / 3);
+        for (let i = 0; i < libres3x2; i++) {
+          montoDescontado += unidades_3x2[i]; // las libres3x2 más baratas son gratis
         }
         break;
       }

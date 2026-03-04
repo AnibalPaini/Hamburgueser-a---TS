@@ -1,3 +1,20 @@
+export type TipoEntrega = "retiro" | "envio";
+
+export interface Domicilio {
+  direccion: string;
+  altura: string;
+  piso?: string;
+  departamento?: string;
+}
+
+export interface Cliente {
+  nombre: string;
+  email: string;
+  telefono: string;
+  domicilio?: Domicilio;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 export type CategoriaProducto =
   | "hamburguesa"
   | "papas"
@@ -78,16 +95,23 @@ export type EstadoOrden =
   | "listo_para_entregar"
   | "entregado"
   | "cancelado";
+export interface ExtraItem {
+  extraId: string;
+  cantidad: number;
+}
+
 export interface ItemOrden {
   productoId: string;
   cantidad: number;
-  precioUnitario: number; // precio base al momento de agregar
-  extrasIds?: string[]; // solo si es hamburguesa
+  precioUnitario: number; // precio base + extras al momento de agregar
+  extras?: ExtraItem[]; // solo si es hamburguesa
 }
 
 export interface Orden {
   id: string;
   items: ItemOrden[];
+  cliente: Cliente;
+  tipoEntrega: TipoEntrega;
   promocionesAplicadas: PromocionAplicada[];
   subtotal: number; // suma de items sin descuentos
   descuentoTotal: number; // suma de todos los descuentos

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { productoService } from "../../../services/api.products";
 import type { Producto } from "../../../types/product.type";
+import { useCarrito } from "../../../context/carrito/cart.hook";
 
 const HamburguesaDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -61,12 +62,31 @@ const HamburguesaDetail = () => {
     });
   };
 
+  const { dispatch } = useCarrito();
+
   const precioExtras = extras.reduce((acc, e) => {
     const qty = selectedExtras[e._id] ?? 0;
     return acc + e.precio * qty;
   }, 0);
 
   const total = (producto?.precio ?? 0) + precioExtras;
+
+  const handleAgregarAlCarrito = () => {
+    if (!producto) return;
+    const extrasItem = Object.entries(selectedExtras)
+      .filter(([, qty]) => qty > 0)
+      .map(([extraId, cantidad]) => ({ extraId, cantidad }));
+    dispatch({
+      type: "ADD_ITEM",
+      payload: {
+        productoId: producto._id,
+        cantidad: 1,
+        precioUnitario: total,
+        ...(extrasItem.length > 0 && { extras: extrasItem }),
+      },
+    });
+    navigate(-1);
+  };
 
   if (isLoading) {
     return (
@@ -214,7 +234,10 @@ const HamburguesaDetail = () => {
         )}
 
         {/* Botón agregar al pedido */}
-        <button className="w-full py-4 text-sm font-black uppercase tracking-[0.2em] text-white bg-primary rounded-xl hover:bg-secondary active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg">
+        <button
+          onClick={handleAgregarAlCarrito}
+          className="w-full py-4 text-sm font-black uppercase tracking-[0.2em] text-white bg-primary rounded-xl hover:bg-secondary active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg"
+        >
           Agregar al pedido — ${total.toFixed(2)}
         </button>
       </div>
