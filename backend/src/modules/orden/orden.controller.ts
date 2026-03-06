@@ -5,7 +5,10 @@ import OrdenService from "./orden.services.js";
 const ordenService = new OrdenService();
 
 type OrdenCreateBody = {
-  items: Pick<ItemOrden, "productoId" | "cantidad" | "extras">[];
+  items: (Pick<ItemOrden, "productoId" | "cantidad" | "extras"> & {
+    esCombo?: boolean;
+    comboId?: string;
+  })[];
   cliente: {
     nombre: string;
     email: string;
@@ -56,12 +59,10 @@ export const createOrden = async (
         .json({ error: "La orden debe tener al menos un item" });
     }
     if (!cliente?.nombre || !cliente?.email || !cliente?.telefono) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Faltan datos del cliente: nombre, email y teléfono son requeridos",
-        });
+      return res.status(400).json({
+        error:
+          "Faltan datos del cliente: nombre, email y teléfono son requeridos",
+      });
     }
     if (!tipoEntrega || !["retiro", "envio"].includes(tipoEntrega)) {
       return res
@@ -72,11 +73,9 @@ export const createOrden = async (
       tipoEntrega === "envio" &&
       (!cliente.domicilio?.direccion || !cliente.domicilio?.altura)
     ) {
-      return res
-        .status(400)
-        .json({
-          error: "Para envío a domicilio se requieren dirección y altura",
-        });
+      return res.status(400).json({
+        error: "Para envío a domicilio se requieren dirección y altura",
+      });
     }
     const nuevaOrden = await ordenService.createOrden({
       items,

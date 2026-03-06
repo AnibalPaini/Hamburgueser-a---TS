@@ -8,15 +8,19 @@ export const initialCartState: Carrito = {
 export const cartReducer = (state: Carrito, action: CartAction): Carrito => {
   switch (action.type) {
     case "ADD_ITEM": {
-      const key = itemKey(action.payload.productoId, action.payload.extras);
+      const key = itemKey(
+        action.payload.productoId,
+        action.payload.extras,
+        action.payload.comboId,
+      );
       const existe = state.items.find(
-        (i) => itemKey(i.productoId, i.extras) === key,
+        (i) => itemKey(i.productoId, i.extras, i.comboId) === key,
       );
       if (existe) {
         return {
           ...state,
           items: state.items.map((i) =>
-            itemKey(i.productoId, i.extras) === key
+            itemKey(i.productoId, i.extras, i.comboId) === key
               ? { ...i, cantidad: i.cantidad + 1 }
               : i,
           ),
@@ -29,21 +33,29 @@ export const cartReducer = (state: Carrito, action: CartAction): Carrito => {
     }
 
     case "REMOVE_ITEM": {
-      const key = itemKey(action.payload.productoId, action.payload.extras);
+      const key = itemKey(
+        action.payload.productoId,
+        action.payload.extras,
+        action.payload.comboId,
+      );
       return {
         ...state,
         items: state.items.filter(
-          (i) => itemKey(i.productoId, i.extras) !== key,
+          (i) => itemKey(i.productoId, i.extras, i.comboId) !== key,
         ),
       };
     }
 
     case "INCREMENT_ITEM": {
-      const key = itemKey(action.payload.productoId, action.payload.extras);
+      const key = itemKey(
+        action.payload.productoId,
+        action.payload.extras,
+        action.payload.comboId,
+      );
       return {
         ...state,
         items: state.items.map((i) =>
-          itemKey(i.productoId, i.extras) === key
+          itemKey(i.productoId, i.extras, i.comboId) === key
             ? { ...i, cantidad: i.cantidad + 1 }
             : i,
         ),
@@ -51,12 +63,16 @@ export const cartReducer = (state: Carrito, action: CartAction): Carrito => {
     }
 
     case "DECREMENT_ITEM": {
-      const key = itemKey(action.payload.productoId, action.payload.extras);
+      const key = itemKey(
+        action.payload.productoId,
+        action.payload.extras,
+        action.payload.comboId,
+      );
       return {
         ...state,
         items: state.items
           .map((i) =>
-            itemKey(i.productoId, i.extras) === key
+            itemKey(i.productoId, i.extras, i.comboId) === key
               ? { ...i, cantidad: i.cantidad - 1 }
               : i,
           )

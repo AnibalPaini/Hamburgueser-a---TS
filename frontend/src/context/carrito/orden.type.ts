@@ -16,6 +16,11 @@ export interface ItemOrden {
   cantidad: number;
   precioUnitario: number; // precio base + extras al momento de agregar
   extras?: ExtraItem[]; // solo si es hamburguesa
+  // Campos exclusivos para combos
+  esCombo?: boolean;
+  comboId?: string; // id de la Promocion tipo "combo"
+  nombreCombo?: string;
+  imagenCombo?: string;
 }
 
 export interface Orden {
@@ -33,8 +38,13 @@ export type Carrito = {
   items: ItemOrden[];
 };
 
-// Clave única por item: mismo producto + misma combinación de extras
-export const itemKey = (productoId: string, extras?: ExtraItem[]): string => {
+// Clave única por item: combos → combo:<id>; productos → productoId|extras
+export const itemKey = (
+  productoId: string,
+  extras?: ExtraItem[],
+  comboId?: string,
+): string => {
+  if (comboId) return `combo:${comboId}`;
   const extrasKey = (extras ?? [])
     .slice()
     .sort((a, b) => a.extraId.localeCompare(b.extraId))
@@ -47,14 +57,14 @@ export type CartAction =
   | { type: "ADD_ITEM"; payload: ItemOrden }
   | {
       type: "REMOVE_ITEM";
-      payload: { productoId: string; extras?: ExtraItem[] };
+      payload: { productoId: string; extras?: ExtraItem[]; comboId?: string };
     }
   | {
       type: "INCREMENT_ITEM";
-      payload: { productoId: string; extras?: ExtraItem[] };
+      payload: { productoId: string; extras?: ExtraItem[]; comboId?: string };
     }
   | {
       type: "DECREMENT_ITEM";
-      payload: { productoId: string; extras?: ExtraItem[] };
+      payload: { productoId: string; extras?: ExtraItem[]; comboId?: string };
     }
   | { type: "CLEAR_CART" };

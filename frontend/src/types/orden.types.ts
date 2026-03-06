@@ -20,6 +20,8 @@ export interface ItemOrden {
   cantidad: number;
   precioUnitario: number;
   extras?: ExtraItem[];
+  esCombo?: boolean;
+  comboId?: string;
 }
 
 export interface PromocionAplicada {

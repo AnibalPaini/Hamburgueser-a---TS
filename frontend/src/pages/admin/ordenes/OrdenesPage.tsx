@@ -1,5 +1,10 @@
+import { useState } from "react";
 import { useOrdenes } from "../../../hooks/useOrdenes";
-import type { EstadoOrden, Orden } from "../../../types/orden.types";
+import { useProductos } from "../../../hooks/useProductos";
+import { usePromociones } from "../../../hooks/usePromociones";
+import type { EstadoOrden, Orden, ItemOrden } from "../../../types/orden.types";
+import type { Producto } from "../../../types/product.type";
+import type { Promocion } from "../../../types/promocion.types";
 
 const ESTADOS_ACTIVOS: EstadoOrden[] = [
   "pendiente",
@@ -33,58 +38,221 @@ const ESTADO_CONFIG: Record<
   cancelado: { label: "Cancelado", color: "border-primary/30 bg-red-50" },
 };
 
+function resolverNombreItem(
+  item: ItemOrden,
+  productos: Producto[],
+  promociones: Promocion[],
+): string {
+  if (item.esCombo && item.comboId) {
+    const combo = promociones.find((p) => p.id === item.comboId);
+    return combo ? `🍔 ${combo.nombre}` : "Combo";
+  }
+  const prod = productos.find((p) => p._id === item.productoId);
+  return prod?.nombre ?? item.productoId.slice(-6).toUpperCase();
+}
+
+function resolverNombreExtra(extraId: string, productos: Producto[]): string {
+  const prod = productos.find((p) => p._id === extraId);
+  return prod?.nombre ?? extraId.slice(-6).toUpperCase();
+}
+
 function OrdenCard({
   orden,
+  productos,
+  promociones,
   onAvanzar,
 }: {
   orden: Orden;
+  productos: Producto[];
+  promociones: Promocion[];
   onAvanzar: (id: string, estado: EstadoOrden) => void;
 }) {
   const config = ESTADO_CONFIG[orden.estado];
+  const [expandida, setExpandida] = useState(false);
 
   return (
-    <div
-      className={`border-l-4 rounded-xl p-4 space-y-3 bg-claro shadow-sm ${config.color}`}
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-secondary font-black font-mono">
-          #{orden.id.slice(-6).toUpperCase()}
-        </p>
-        <span className="text-xs text-secondary/50 font-semibold">
-          {new Date(orden.createdAt).toLocaleTimeString("es-AR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
+    <div className={`border-l-4 rounded-xl bg-claro shadow-sm ${config.color}`}>
+      {/* Cabecera siempre visible */}
+      <div className="p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-secondary font-black font-mono text-sm">
+            #{orden.id.slice(-6).toUpperCase()}
+          </p>
+          <span className="text-xs text-secondary/50 font-semibold">
+            {new Date(orden.createdAt).toLocaleTimeString("es-AR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+
+        {/* Resumen rápido */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-secondary/70">
+          <span>{orden.cliente?.nombre ?? "-"}</span>
+          <span className="text-secondary/30">·</span>
+          {orden.tipoEntrega === "envio" ? (
+            <span className="text-blue-600 font-black">🛵 Envío</span>
+          ) : (
+            <span className="text-green-600 font-black">🏪 Retiro</span>
+          )}
+        </div>
+
+        {/* Items resumidos */}
+        <div className="space-y-0.5">
+          {orden.items.map((item, i) => (
+            <div key={i} className="flex justify-between text-sm">
+              <span className="text-secondary/80 font-semibold">
+                ×{item.cantidad}{" "}
+                {resolverNombreItem(item, productos, promociones)}
+              </span>
+              <span className="text-secondary/50 font-semibold">
+                ${(item.precioUnitario * item.cantidad).toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-primary/15 pt-2 flex justify-between items-center">
+          <button
+            onClick={() => setExpandida((v) => !v)}
+            className="text-xs text-primary font-black uppercase tracking-wide hover:underline"
+          >
+            {expandida ? "▲ Menos info" : "▼ Ver detalle"}
+          </button>
+          <span className="text-secondary font-black text-sm">
+            ${orden.total.toFixed(2)}
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-1">
-        {orden.items.map((item, i) => (
-          <div key={i} className="flex justify-between text-sm">
-            <span className="text-secondary/70">
-              x{item.cantidad} · {item.productoId.slice(-4)}
-            </span>
-            <span className="text-secondary/50">
-              ${(item.precioUnitario * item.cantidad).toFixed(2)}
-            </span>
+      {/* Panel expandible */}
+      {expandida && (
+        <div className="border-t border-primary/10 px-4 pb-4 pt-3 space-y-3 bg-white/60 rounded-b-xl">
+          {/* Cliente */}
+          <div>
+            <p className="text-[10px] font-black text-secondary/40 uppercase tracking-widest mb-1">
+              Cliente
+            </p>
+            <p className="text-sm text-secondary font-bold">
+              {orden.cliente?.nombre ?? "-"}
+            </p>
+            <p className="text-xs text-secondary/60">
+              {orden.cliente?.email ?? "-"}
+            </p>
+            <p className="text-xs text-secondary/60">
+              {orden.cliente?.telefono ?? "-"}
+            </p>
           </div>
-        ))}
-      </div>
 
-      <div className="border-t border-primary/15 pt-2 flex justify-between">
-        <span className="text-secondary/50 text-sm font-semibold">Total</span>
-        <span className="text-secondary font-black">
-          ${orden.total.toFixed(2)}
-        </span>
-      </div>
+          {/* Dirección si es envío */}
+          {orden.tipoEntrega === "envio" && orden.cliente?.domicilio && (
+            <div>
+              <p className="text-[10px] font-black text-secondary/40 uppercase tracking-widest mb-1">
+                Dirección de envío
+              </p>
+              <p className="text-sm text-secondary font-semibold">
+                {orden.cliente.domicilio.direccion}{" "}
+                {orden.cliente.domicilio.altura}
+                {orden.cliente.domicilio.piso
+                  ? `, Piso ${orden.cliente.domicilio.piso}`
+                  : ""}
+                {orden.cliente.domicilio.departamento
+                  ? ` Dpto. ${orden.cliente.domicilio.departamento}`
+                  : ""}
+              </p>
+            </div>
+          )}
 
+          {/* Items con extras */}
+          <div>
+            <p className="text-[10px] font-black text-secondary/40 uppercase tracking-widest mb-1">
+              Detalle de items
+            </p>
+            <div className="space-y-2">
+              {orden.items.map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-primary/5 rounded-lg px-3 py-2 space-y-1"
+                >
+                  <div className="flex justify-between">
+                    <span className="text-sm text-secondary font-black">
+                      ×{item.cantidad}{" "}
+                      {resolverNombreItem(item, productos, promociones)}
+                    </span>
+                    <span className="text-sm text-secondary font-bold">
+                      ${(item.precioUnitario * item.cantidad).toFixed(2)}
+                    </span>
+                  </div>
+                  {item.extras && item.extras.length > 0 && (
+                    <ul className="space-y-0.5 pl-1">
+                      {item.extras.map((e) => (
+                        <li
+                          key={e.extraId}
+                          className="text-xs text-secondary/60 font-semibold"
+                        >
+                          + {e.cantidad}×{" "}
+                          {resolverNombreExtra(e.extraId, productos)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Descuentos */}
+          {orden.promocionesAplicadas.length > 0 && (
+            <div>
+              <p className="text-[10px] font-black text-secondary/40 uppercase tracking-widest mb-1">
+                Descuentos
+              </p>
+              {orden.promocionesAplicadas.map((p) => (
+                <div
+                  key={p.promocionId}
+                  className="flex justify-between text-xs"
+                >
+                  <span className="text-green-600 font-semibold">
+                    {p.nombre}
+                  </span>
+                  <span className="text-green-600 font-black">
+                    −${p.montoDescontado.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Totales */}
+          <div className="border-t border-primary/10 pt-2 space-y-1 text-xs">
+            <div className="flex justify-between text-secondary/60">
+              <span>Subtotal</span>
+              <span>${orden.subtotal.toFixed(2)}</span>
+            </div>
+            {orden.descuentoTotal > 0 && (
+              <div className="flex justify-between text-green-600 font-semibold">
+                <span>Descuento total</span>
+                <span>−${orden.descuentoTotal.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-secondary font-black text-sm pt-0.5">
+              <span>Total</span>
+              <span>${orden.total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Botón avanzar estado */}
       {config.next && (
-        <button
-          onClick={() => onAvanzar(orden.id, config.next!)}
-          className="w-full bg-primary hover:bg-secondary text-claro font-black py-2 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-        >
-          {config.nextLabel}
-        </button>
+        <div className="px-4 pb-4">
+          <button
+            onClick={() => onAvanzar(orden.id, config.next!)}
+            className="w-full bg-primary hover:bg-secondary text-claro font-black py-2 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+          >
+            {config.nextLabel}
+          </button>
+        </div>
       )}
     </div>
   );
@@ -92,6 +260,8 @@ function OrdenCard({
 
 export function OrdenesPage() {
   const { ordenes, isLoading, error, actualizarEstado, refetch } = useOrdenes();
+  const { productos } = useProductos();
+  const { promociones } = usePromociones();
 
   const ordenesActivas = ordenes.filter((o) =>
     ESTADOS_ACTIVOS.includes(o.estado),
@@ -146,6 +316,8 @@ export function OrdenesPage() {
                   <OrdenCard
                     key={orden.id}
                     orden={orden}
+                    productos={productos}
+                    promociones={promociones}
                     onAvanzar={actualizarEstado}
                   />
                 ))}

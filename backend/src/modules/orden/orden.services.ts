@@ -12,7 +12,10 @@ import ProductoModel from "../productos/productos.model.js";
 import PromocionModel from "../promociones/promocion.model.js";
 
 type OrdenCreateBody = {
-  items: Pick<ItemOrden, "productoId" | "cantidad" | "extras">[];
+  items: (Pick<ItemOrden, "productoId" | "cantidad" | "extras"> & {
+    esCombo?: boolean;
+    comboId?: string;
+  })[];
   cliente: Cliente;
   tipoEntrega: TipoEntrega;
 };
@@ -31,6 +34,8 @@ export default class OrdenService {
         descuentoTotal: orden.descuentoTotal,
         total: orden.total,
         promocionesAplicadas: orden.promocionesAplicadas,
+        createdAt: orden.createdAt,
+        updatedAt: orden.updatedAt,
       }));
     } catch (error) {
       console.error("Error al obtener ordenes:", error);
@@ -51,6 +56,8 @@ export default class OrdenService {
         descuentoTotal: orden.descuentoTotal,
         total: orden.total,
         promocionesAplicadas: orden.promocionesAplicadas,
+        createdAt: orden.createdAt,
+        updatedAt: orden.updatedAt,
       };
     } catch (error) {
       console.error("Error al obtener la orden:", error);
@@ -60,26 +67,42 @@ export default class OrdenService {
 
   async createOrden(data: OrdenCreateBody): Promise<Orden> {
     try {
+      // Separar items normales de combos
+      const itemsNormales = data.items.filter((i) => !i.esCombo);
+      const itemsCombos = data.items.filter((i) => i.esCombo && i.comboId);
+
       // 1. Buscar productos y extras en paralelo (nunca confiar en precios del cliente)
-      const productosIds = data.items.map((i) => i.productoId);
+      const productosIds = itemsNormales.map((i) => i.productoId);
       const extrasUnicosIds = [
         ...new Set(
-          data.items.flatMap((i) => (i.extras ?? []).map((e) => e.extraId)),
+          itemsNormales.flatMap((i) => (i.extras ?? []).map((e) => e.extraId)),
         ),
       ];
-      const [productosEncontrados, todosExtrasEncontrados] = await Promise.all([
-        ProductoModel.find({ _id: { $in: productosIds } }).lean(),
-        extrasUnicosIds.length
-          ? ProductoModel.find({
-              _id: { $in: extrasUnicosIds },
-              categoria: "extra",
-              activo: true,
-            }).lean()
-          : Promise.resolve([]),
-      ]);
+      const comboIds = itemsCombos.map((i) => i.comboId!);
 
-      // 2. Validar que todos los productos existen y están activos
-      for (const item of data.items) {
+      const [productosEncontrados, todosExtrasEncontrados, combosEncontrados] =
+        await Promise.all([
+          productosIds.length
+            ? ProductoModel.find({ _id: { $in: productosIds } }).lean()
+            : Promise.resolve([]),
+          extrasUnicosIds.length
+            ? ProductoModel.find({
+                _id: { $in: extrasUnicosIds },
+                categoria: "extra",
+                activo: true,
+              }).lean()
+            : Promise.resolve([]),
+          comboIds.length
+            ? PromocionModel.find({
+                _id: { $in: comboIds },
+                tipo: "combo",
+                activa: true,
+              }).lean()
+            : Promise.resolve([]),
+        ]);
+
+      // 2. Validar productos normales
+      for (const item of itemsNormales) {
         const producto = productosEncontrados.find(
           (p) => p._id.toString() === item.productoId,
         );
@@ -103,7 +126,6 @@ export default class OrdenService {
             );
           }
 
-          // Verificar que ningún extra esté en la lista de bloqueados
           const excluidos = producto.extrasExcluidos ?? [];
           const extraBloqueado = idsExtrasItem.find((eid) =>
             excluidos.includes(eid),
@@ -116,8 +138,24 @@ export default class OrdenService {
         }
       }
 
-      // 4. Construir items con el precio real (base + suma de extras × su cantidad)
-      const itemsConPrecio: ItemOrden[] = data.items.map((item) => {
+      // 2b. Validar combos
+      for (const item of itemsCombos) {
+        const combo = combosEncontrados.find(
+          (c) => c._id.toString() === item.comboId,
+        );
+        if (!combo) {
+          throw new Error(
+            `Combo ${item.comboId} no encontrado o no está activo`,
+          );
+        }
+        const ahora = new Date();
+        if (ahora < combo.fechaInicio || ahora > combo.fechaFin) {
+          throw new Error(`El combo ${combo.nombre} no está vigente`);
+        }
+      }
+
+      // 4. Construir items normales con precio real
+      const itemsNormalesConPrecio: ItemOrden[] = itemsNormales.map((item) => {
         const producto = productosEncontrados.find(
           (p) => p._id.toString() === item.productoId,
         )!;
@@ -135,15 +173,35 @@ export default class OrdenService {
         };
       });
 
-      // 5. Buscar promociones activas
+      // 4b. Construir items de combos con precio real (desde la promo, no desde el cliente)
+      const itemsCombosConPrecio: ItemOrden[] = itemsCombos.map((item) => {
+        const combo = combosEncontrados.find(
+          (c) => c._id.toString() === item.comboId,
+        )!;
+        return {
+          productoId: item.comboId!, // id de la promo como identificador
+          cantidad: item.cantidad,
+          precioUnitario: combo.valor ?? 0,
+          esCombo: true,
+          comboId: item.comboId,
+        };
+      });
+
+      const todosLosItems = [
+        ...itemsNormalesConPrecio,
+        ...itemsCombosConPrecio,
+      ];
+
+      // 5. Buscar promociones activas (solo aplican sobre items normales)
       const ahora = new Date();
       const promocionesActivas = await PromocionModel.find({
         activa: true,
+        tipo: { $ne: "combo" }, // los combos ya tienen precio fijo
         fechaInicio: { $lte: ahora },
         fechaFin: { $gte: ahora },
       }).lean();
 
-      // 6. Mapear catalogo y promociones a los types (ObjectId → string)
+      // 6. Mapear catálogo y promociones
       const catalogo = productosEncontrados.map((p) => ({
         id: p._id.toString(),
         nombre: p.nombre,
@@ -174,11 +232,11 @@ export default class OrdenService {
         }),
       }));
 
-      // 7. Aplicar motor de promociones
+      // 7. Aplicar motor de promociones solo a items normales
       const ordenCalculada = MotorPromociones.aplicarPromociones(
         {
           id: "",
-          items: itemsConPrecio,
+          items: itemsNormalesConPrecio,
           estado: "pendiente",
           cliente: data.cliente,
           tipoEntrega: data.tipoEntrega,
@@ -187,15 +245,23 @@ export default class OrdenService {
         catalogo,
       );
 
+      // Sumar el subtotal de los combos al total final
+      const subtotalCombos = itemsCombosConPrecio.reduce(
+        (acc, i) => acc + i.precioUnitario * i.cantidad,
+        0,
+      );
+      const subtotalFinal = ordenCalculada.subtotal + subtotalCombos;
+      const totalFinal = ordenCalculada.total + subtotalCombos;
+
       // 8. Guardar la orden final en la base
       const ordenGuardada = await OrdenModel.create({
         cliente: data.cliente,
         tipoEntrega: data.tipoEntrega,
-        items: ordenCalculada.items,
+        items: todosLosItems,
         estado: "pendiente",
-        subtotal: ordenCalculada.subtotal,
+        subtotal: subtotalFinal,
         descuentoTotal: ordenCalculada.descuentoTotal,
-        total: ordenCalculada.total,
+        total: totalFinal,
         promocionesAplicadas: ordenCalculada.promocionesAplicadas,
       });
 
@@ -209,6 +275,8 @@ export default class OrdenService {
         descuentoTotal: ordenGuardada.descuentoTotal,
         total: ordenGuardada.total,
         promocionesAplicadas: ordenGuardada.promocionesAplicadas,
+        createdAt: ordenGuardada.createdAt,
+        updatedAt: ordenGuardada.updatedAt,
       };
     } catch (error) {
       console.error("Error al crear la orden:", error);
@@ -233,6 +301,8 @@ export default class OrdenService {
         descuentoTotal: orden.descuentoTotal,
         total: orden.total,
         promocionesAplicadas: orden.promocionesAplicadas,
+        createdAt: orden.createdAt,
+        updatedAt: orden.updatedAt,
       };
     } catch (error) {
       console.error("Error al actualizar el estado:", error);

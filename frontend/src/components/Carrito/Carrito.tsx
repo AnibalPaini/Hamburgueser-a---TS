@@ -14,6 +14,50 @@ const tipoLabel: Record<string, string> = {
   combo: "Combo",
 };
 
+// ─── Input helper (fuera del componente para evitar re-montaje en cada render) ─
+interface InputProps {
+  label: string;
+  field: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+}
+
+const CarritoInput = ({
+  label,
+  field,
+  value,
+  onChange,
+  error,
+  placeholder,
+  type = "text",
+  required = false,
+}: InputProps) => (
+  <div className="flex flex-col gap-1">
+    <label
+      htmlFor={`carrito-${field}`}
+      className="text-xs font-bold text-gray-500 uppercase tracking-wider"
+    >
+      {label}
+      {required && <span className="text-red-400 ml-0.5">*</span>}
+    </label>
+    <input
+      id={`carrito-${field}`}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`border rounded-lg px-3 py-2 text-sm text-secondary bg-white placeholder-gray-400 outline-none focus:border-primary transition ${
+        error ? "border-red-400" : "border-primary/20 focus:border-primary"
+      }`}
+    />
+    {error && <span className="text-red-400 text-[11px]">{error}</span>}
+  </div>
+);
+
 type Paso = "carrito" | "datos";
 
 interface FormState {
@@ -98,6 +142,10 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
           productoId: item.productoId,
           cantidad: item.cantidad,
           ...(item.extras?.length && { extras: item.extras }),
+          ...(item.esCombo && {
+            esCombo: true,
+            comboId: item.comboId,
+          }),
         })),
         tipoEntrega: form.tipoEntrega,
         cliente: {
@@ -125,40 +173,7 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
   };
 
   // ─── Input helper ───────────────────────────────────────────────────────────
-  const Input = ({
-    label,
-    field,
-    placeholder,
-    type = "text",
-    required = false,
-  }: {
-    label: string;
-    field: keyof FormState;
-    placeholder?: string;
-    type?: string;
-    required?: boolean;
-  }) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-        {label}
-        {required && <span className="text-red-400 ml-0.5">*</span>}
-      </label>
-      <input
-        type={type}
-        value={form[field] as string}
-        onChange={(e) => setField(field, e.target.value)}
-        placeholder={placeholder}
-        className={`bg-claro/5 border rounded-lg px-3 py-2 text-sm text-claro placeholder-gray-600 outline-none focus:border-primary transition ${
-          errores[field]
-            ? "border-red-400"
-            : "border-primary/20 focus:border-primary"
-        }`}
-      />
-      {errores[field] && (
-        <span className="text-red-400 text-[11px]">{errores[field]}</span>
-      )}
-    </div>
-  );
+  // (componente definido fuera del árbol — ver CarritoInput arriba)
 
   return (
     <>
@@ -240,27 +255,49 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
 
               {/* Items */}
               {carrito.items.map((item) => {
-                const producto = productos.find(
-                  (p) => p._id === item.productoId,
-                );
+                const esCombo = item.esCombo === true;
+                const producto = !esCombo
+                  ? productos.find((p) => p._id === item.productoId)
+                  : undefined;
                 const esHamburguesa = producto?.categoria === "hamburguesa";
+                const imagenMostrar = esCombo
+                  ? item.imagenCombo
+                  : producto?.imagenUrl;
+                const nombreMostrar = esCombo
+                  ? (item.nombreCombo ?? "Combo")
+                  : (producto?.nombre ?? item.productoId);
                 return (
                   <div
-                    key={`${item.productoId}-${JSON.stringify(item.extras)}`}
+                    key={
+                      esCombo
+                        ? `combo-${item.comboId}`
+                        : `${item.productoId}-${JSON.stringify(item.extras)}`
+                    }
                     className="bg-claro/5 border border-primary/10 rounded-xl p-4 flex gap-3"
                   >
-                    {producto?.imagenUrl && (
+                    {imagenMostrar ? (
                       <img
-                        src={producto.imagenUrl}
-                        alt={producto.nombre}
+                        src={imagenMostrar}
+                        alt={nombreMostrar}
                         className="w-16 h-16 object-cover rounded-lg shrink-0"
                       />
-                    )}
+                    ) : esCombo ? (
+                      <span className="w-16 h-16 flex items-center justify-center text-3xl shrink-0">
+                        🍔
+                      </span>
+                    ) : null}
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-black text-secondary text-sm leading-tight">
-                          {producto?.nombre ?? item.productoId}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-black text-secondary text-sm leading-tight">
+                            {nombreMostrar}
+                          </span>
+                          {esCombo && (
+                            <span className="text-[10px] font-black bg-primary/15 text-primary px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                              Combo
+                            </span>
+                          )}
+                        </div>
                         <button
                           onClick={() =>
                             dispatch({
@@ -268,6 +305,7 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
                               payload: {
                                 productoId: item.productoId,
                                 extras: item.extras,
+                                comboId: item.comboId,
                               },
                             })
                           }
@@ -308,6 +346,7 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
                                 payload: {
                                   productoId: item.productoId,
                                   extras: item.extras,
+                                  comboId: item.comboId,
                                 },
                               })
                             }
@@ -325,6 +364,7 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
                                 payload: {
                                   productoId: item.productoId,
                                   extras: item.extras,
+                                  comboId: item.comboId,
                                 },
                               })
                             }
@@ -436,23 +476,32 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-primary/10 pb-1">
                   Datos personales
                 </span>
-                <Input
+                <CarritoInput
                   label="Nombre"
                   field="nombre"
+                  value={form.nombre}
+                  onChange={(v) => setField("nombre", v)}
+                  error={errores.nombre}
                   placeholder="Juan Pérez"
                   required
                 />
-                <Input
+                <CarritoInput
                   label="Email"
                   field="email"
                   type="email"
+                  value={form.email}
+                  onChange={(v) => setField("email", v)}
+                  error={errores.email}
                   placeholder="juan@ejemplo.com"
                   required
                 />
-                <Input
+                <CarritoInput
                   label="Teléfono"
                   field="telefono"
                   type="tel"
+                  value={form.telefono}
+                  onChange={(v) => setField("telefono", v)}
+                  error={errores.telefono}
                   placeholder="11-1234-5678"
                   required
                 />
@@ -464,23 +513,37 @@ export const Carrito = ({ isOpen, onClose }: Props) => {
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-primary/10 pb-1">
                     Dirección de envío
                   </span>
-                  <Input
+                  <CarritoInput
                     label="Calle"
                     field="direccion"
+                    value={form.direccion}
+                    onChange={(v) => setField("direccion", v)}
+                    error={errores.direccion}
                     placeholder="Av. Siempre Viva"
                     required
                   />
-                  <Input
+                  <CarritoInput
                     label="Altura / Número"
                     field="altura"
+                    value={form.altura}
+                    onChange={(v) => setField("altura", v)}
+                    error={errores.altura}
                     placeholder="742"
                     required
                   />
                   <div className="grid grid-cols-2 gap-3">
-                    <Input label="Piso" field="piso" placeholder="3" />
-                    <Input
+                    <CarritoInput
+                      label="Piso"
+                      field="piso"
+                      value={form.piso}
+                      onChange={(v) => setField("piso", v)}
+                      placeholder="3"
+                    />
+                    <CarritoInput
                       label="Depto."
                       field="departamento"
+                      value={form.departamento}
+                      onChange={(v) => setField("departamento", v)}
                       placeholder="B"
                     />
                   </div>

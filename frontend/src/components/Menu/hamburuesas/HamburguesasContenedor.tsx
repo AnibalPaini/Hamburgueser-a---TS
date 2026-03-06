@@ -5,8 +5,15 @@ import { productoService } from "../../../services/api.products";
 import { promocionService } from "../../../services/promocion.service";
 import type { Producto } from "../../../types/product.type";
 import type { Promocion } from "../../../types/promocion.types";
+import { useCarrito } from "../../../context/carrito/cart.hook";
 
-type Filtro = "todos" | "hamburguesa" | "papas" | "bebida" | "postre" | "combos";
+type Filtro =
+  | "todos"
+  | "hamburguesa"
+  | "papas"
+  | "bebida"
+  | "postre"
+  | "combos";
 
 const FILTROS: { label: string; value: Filtro }[] = [
   { label: "Todos", value: "todos" },
@@ -41,11 +48,20 @@ function getPromocionActiva(
 
   let label: string;
   switch (promo.tipo) {
-    case "2x1": label = "2x1"; break;
-    case "3x2": label = "3x2"; break;
-    case "porcentaje": label = `-${promo.valor}%`; break;
-    case "monto_fijo": label = `-$${promo.valor}`; break;
-    default: label = "Promo";
+    case "2x1":
+      label = "2x1";
+      break;
+    case "3x2":
+      label = "3x2";
+      break;
+    case "porcentaje":
+      label = `-${promo.valor}%`;
+      break;
+    case "monto_fijo":
+      label = `-$${promo.valor}`;
+      break;
+    default:
+      label = "Promo";
   }
 
   return { label, tipo: promo.tipo, valor: promo.valor ?? 0 };
@@ -55,6 +71,22 @@ const HamburguesasContenedor = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [promociones, setPromociones] = useState<Promocion[]>([]);
   const [filtroActivo, setFiltroActivo] = useState<Filtro>("todos");
+  const { dispatch } = useCarrito();
+
+  const agregarComboAlCarrito = (combo: Promocion) => {
+    dispatch({
+      type: "ADD_ITEM",
+      payload: {
+        productoId: combo.id, // usamos el id de la promo como identificador
+        cantidad: 1,
+        precioUnitario: combo.valor ?? 0,
+        esCombo: true,
+        comboId: combo.id,
+        nombreCombo: combo.nombre,
+        imagenCombo: combo.imagenUrl,
+      },
+    });
+  };
 
   useEffect(() => {
     productoService
@@ -78,7 +110,9 @@ const HamburguesasContenedor = () => {
 
   const productosFiltrados =
     filtroActivo === "todos" || filtroActivo === "combos"
-      ? filtroActivo === "todos" ? productos : []
+      ? filtroActivo === "todos"
+        ? productos
+        : []
       : productos.filter((p) => p.categoria === filtroActivo);
 
   return (
@@ -117,7 +151,11 @@ const HamburguesasContenedor = () => {
           combosActivos.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {combosActivos.map((combo) => (
-                <CombosCard key={combo.id} {...combo} />
+                <CombosCard
+                  key={combo.id}
+                  {...combo}
+                  onAgregarAlCarrito={() => agregarComboAlCarrito(combo)}
+                />
               ))}
             </div>
           ) : (

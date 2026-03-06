@@ -1,5 +1,9 @@
 import type { Promocion } from "../../../types/promocion.types";
 
+export interface CombosCardProps extends Promocion {
+  onAgregarAlCarrito?: () => void;
+}
+
 const formatDescuento = (tipo: Promocion["tipo"], valor: number): string => {
   switch (tipo) {
     case "porcentaje":
@@ -23,8 +27,9 @@ const CombosCard = ({
   tipo,
   valor,
   fechaFin,
-  imagenUrl
-}: Promocion) => {
+  imagenUrl,
+  onAgregarAlCarrito,
+}: CombosCardProps) => {
   const fechaFormateada = new Date(fechaFin).toLocaleDateString("es-AR", {
     day: "2-digit",
     month: "short",
@@ -36,7 +41,11 @@ const CombosCard = ({
       {/* Banner superior con degradado */}
       <div className="relative h-32 bg-linear-to-br from-primary to-secondary flex items-center justify-center">
         {imagenUrl ? (
-          <img src={imagenUrl} alt={nombre} className="w-full h-full object-cover" />
+          <img
+            src={imagenUrl}
+            alt={nombre}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <span className="text-5xl">🍔</span>
         )}
@@ -60,7 +69,11 @@ const CombosCard = ({
           Válido hasta:{" "}
           <span className="font-semibold text-gray-500">{fechaFormateada}</span>
         </p>
-        <button className="mt-2 w-full py-2.5 text-xs font-black uppercase tracking-[0.15em] text-white bg-primary rounded-md hover:bg-secondary active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md">
+        <button
+          onClick={onAgregarAlCarrito}
+          disabled={!onAgregarAlCarrito}
+          className="mt-2 w-full py-2.5 text-xs font-black uppercase tracking-[0.15em] text-white bg-primary rounded-md hover:bg-secondary active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Agregar al pedido
         </button>
       </div>

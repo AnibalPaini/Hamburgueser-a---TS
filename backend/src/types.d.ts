@@ -105,6 +105,8 @@ export interface ItemOrden {
   cantidad: number;
   precioUnitario: number; // precio base + extras al momento de agregar
   extras?: ExtraItem[]; // solo si es hamburguesa
+  esCombo?: boolean;
+  comboId?: string; // id de la Promocion tipo "combo"
 }
 
 export interface Orden {
@@ -117,6 +119,8 @@ export interface Orden {
   descuentoTotal: number; // suma de todos los descuentos
   total: number; // subtotal - descuentoTotal
   estado: EstadoOrden;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /** Detalle de cómo y cuánto se aplicó cada promoción */

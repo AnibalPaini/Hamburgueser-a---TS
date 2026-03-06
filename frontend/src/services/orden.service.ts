@@ -7,6 +7,8 @@ export interface CrearOrdenItemDTO {
   productoId: string;
   cantidad: number;
   extras?: ExtraItem[];
+  esCombo?: boolean;
+  comboId?: string;
 }
 
 export interface CrearOrdenDTO {

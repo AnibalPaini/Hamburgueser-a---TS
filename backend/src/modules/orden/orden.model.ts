@@ -36,6 +36,8 @@ const OrdenSchema = new mongoose.Schema<Orden>(
             cantidad: { type: Number, required: true, min: 1 },
           },
         ],
+        esCombo: { type: Boolean, default: false },
+        comboId: { type: String },
       },
     ],
     estado: {
